@@ -22,6 +22,15 @@ import { useConfetti } from "@/hooks/useConfetti";
 import { ShopItem } from "@/components/demo/ShopItemCard";
 import { toast } from "sonner";
 
+// Theme ID to CSS class mapping
+const THEME_CLASS_MAP: Record<string, string> = {
+  "theme-sunset": "theme-sunset",
+  "theme-ocean": "theme-ocean",
+  "theme-forest": "theme-forest",
+  "theme-midnight": "theme-midnight",
+  "theme-aurora": "theme-aurora",
+};
+
 const DemoDashboard = () => {
   const [showReflection, setShowReflection] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
@@ -110,9 +119,32 @@ const DemoDashboard = () => {
       toast.success("Avatar equipped!");
     } else {
       setEquippedTheme(itemId);
-      toast.success("Theme equipped!");
+      toast.success("Theme applied! 🎨");
     }
   };
+
+  // Apply theme class to document when equipped theme changes
+  useEffect(() => {
+    // Remove all theme classes first
+    Object.values(THEME_CLASS_MAP).forEach(cls => {
+      document.documentElement.classList.remove(cls);
+    });
+    
+    // Apply new theme if one is equipped
+    if (equippedTheme) {
+      const themeClass = THEME_CLASS_MAP[equippedTheme];
+      if (themeClass) {
+        document.documentElement.classList.add(themeClass);
+      }
+    }
+    
+    // Cleanup on unmount - remove theme classes
+    return () => {
+      Object.values(THEME_CLASS_MAP).forEach(cls => {
+        document.documentElement.classList.remove(cls);
+      });
+    };
+  }, [equippedTheme]);
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Heart, BookOpen, Cookie } from "lucide-react";
 import RotatingText from "@/components/RotatingText";
@@ -7,7 +8,12 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-secondary/20 to-background">
       {/* Navigation */}
-      <nav className="w-full px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
+      <motion.nav 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full px-6 py-4 flex items-center justify-between max-w-6xl mx-auto"
+      >
         <div className="flex items-center gap-2">
           <span className="text-xl font-semibold text-foreground">🌿 Reflect</span>
         </div>
@@ -19,29 +25,49 @@ const Landing = () => {
             <Button className="rounded-full px-6">Get Started</Button>
           </Link>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* Hero Section */}
       <main className="max-w-4xl mx-auto px-6 pt-20 pb-32 text-center">
-        <div className="mb-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-6"
+        >
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
             <Sparkles className="w-4 h-4" />
             WELLNESS APP / DAILY REFLECTION
           </span>
-        </div>
+        </motion.div>
 
-        <h1 className="text-5xl md:text-7xl font-serif font-bold text-foreground mb-8 leading-tight">
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-5xl md:text-7xl font-serif font-bold text-foreground mb-8 leading-tight"
+        >
           Stop crying over{" "}
           <RotatingText />
           <span className="text-foreground">.</span>
-        </h1>
+        </motion.h1>
 
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
+        >
           Reflect is your gentle companion for daily check-ins, mood tracking, and celebrating tiny wins. 
           No judgment. Just growth.
-        </p>
+        </motion.p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
           <Link to="/auth">
             <Button size="lg" className="rounded-full px-8 py-6 text-lg">
               Get Started Free
@@ -52,7 +78,7 @@ const Landing = () => {
               How it works
             </Button>
           </Link>
-        </div>
+        </motion.div>
       </main>
 
       {/* Features Preview */}
