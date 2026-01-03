@@ -16,6 +16,7 @@ import DemoCheckInJournal from "@/components/demo/DemoCheckInJournal";
 import DemoWeeklyReflection from "@/components/demo/DemoWeeklyReflection";
 import DemoCookieShop from "@/components/demo/DemoCookieShop";
 import DemoPerspectiveSwap from "@/components/demo/DemoPerspectiveSwap";
+import DemoTasksSidebar from "@/components/demo/DemoTasksSidebar";
 import CursorEffects from "@/components/demo/CursorEffects";
 import PerfectDayCelebration from "@/components/demo/PerfectDayCelebration";
 import AchievementBadges from "@/components/demo/AchievementBadges";
@@ -50,12 +51,23 @@ const DemoDashboard = () => {
   const [showBanner, setShowBanner] = useState(true);
   const [showShop, setShowShop] = useState(false);
   const [checkInComplete, setCheckInComplete] = useState(false);
+  const [journalComplete, setJournalComplete] = useState(false);
+  
+  // Track habits and steps with full data for sidebar
+  const [habits, setHabits] = useState([
+    { id: "1", name: "Morning meditation", completed: true },
+    { id: "2", name: "Read for 15 mins", completed: false },
+    { id: "3", name: "Exercise", completed: false },
+  ]);
+  const [steps, setSteps] = useState([
+    { id: "1", text: "Take 3 deep breaths", completed: false },
+    { id: "2", text: "Drink a glass of water", completed: false },
+    { id: "3", text: "Stretch for 2 minutes", completed: false },
+  ]);
   
   // Track completed habits and steps for streak
-  const [completedHabits, setCompletedHabits] = useState<Record<string, boolean>>({});
+  const [completedHabits, setCompletedHabits] = useState<Record<string, boolean>>({ "1": true });
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
-  const [totalHabits, setTotalHabits] = useState(3);
-  const [totalSteps, setTotalSteps] = useState(3);
   
   // Achievement tracking
   const [habitsCompletedTotal, setHabitsCompletedTotal] = useState(5);
@@ -146,6 +158,9 @@ const DemoDashboard = () => {
   const canGoForward = historyIndex < viewHistory.length - 1;
 
   // Check for perfect day
+  const totalHabits = habits.length;
+  const totalSteps = steps.length;
+  
   const isPerfectDay = useMemo(() => {
     if (totalHabits === 0 && totalSteps === 0) return false;
     const habitsComplete = totalHabits > 0 && Object.values(completedHabits).filter(Boolean).length >= totalHabits;
@@ -198,14 +213,18 @@ const DemoDashboard = () => {
   const handleEquip = (itemId: string | null, type: "avatar" | "theme" | "cursor") => {
     playEquip();
     if (type === "avatar") {
-      setEquippedAvatar(itemId);
-      toast.success(itemId ? "Avatar equipped!" : "Avatar unequipped!");
+      // Toggle: if already equipped, unequip
+      const newValue = equippedAvatar === itemId ? null : itemId;
+      setEquippedAvatar(newValue);
+      toast.success(newValue ? "Avatar equipped!" : "Avatar unequipped!");
     } else if (type === "theme") {
-      setEquippedTheme(itemId);
-      toast.success(itemId ? "Theme applied! 🎨" : "Theme reset to default! 🌿");
+      const newValue = equippedTheme === itemId ? null : itemId;
+      setEquippedTheme(newValue);
+      toast.success(newValue ? "Theme applied! 🎨" : "Theme reset to default! 🌿");
     } else {
-      setEquippedCursor(itemId);
-      toast.success(itemId ? "Cursor equipped! 🖱️" : "Cursor reset!");
+      const newValue = equippedCursor === itemId ? null : itemId;
+      setEquippedCursor(newValue);
+      toast.success(newValue ? "Cursor equipped! 🖱️" : "Cursor reset!");
     }
   };
 
@@ -225,13 +244,32 @@ const DemoDashboard = () => {
   const handleHabitComplete = (habitId: string, completed: boolean) => {
     playClick();
     setCompletedHabits(prev => ({ ...prev, [habitId]: completed }));
+    setHabits(prev => prev.map(h => h.id === habitId ? { ...h, completed } : h));
     if (completed) setHabitsCompletedTotal(prev => prev + 1);
+  };
+
+  const handleSidebarHabitToggle = (habitId: string) => {
+    const habit = habits.find(h => h.id === habitId);
+    if (habit) {
+      handleHabitComplete(habitId, !habit.completed);
+    }
+  };
+
+  const handleSidebarStepToggle = (stepId: string) => {
+    const step = steps.find(s => s.id === stepId);
+    if (step) {
+      const newCompleted = !step.completed;
+      setCompletedSteps(prev => ({ ...prev, [stepId]: newCompleted }));
+      setSteps(prev => prev.map(s => s.id === stepId ? { ...s, completed: newCompleted } : s));
+      playClick();
+    }
   };
 
   const handleJournalSave = (desc: string) => {
     handleAddCookie(desc, "journal");
     setJournalEntriesCount(prev => prev + 1);
     setCheckInComplete(true);
+    setJournalComplete(true);
   };
 
   const handleStartCheckIn = () => {
@@ -385,6 +423,18 @@ const DemoDashboard = () => {
   // Render Main Dashboard
   return (
     <div className="min-h-screen bg-background">
+      {/* Tasks Sidebar - hidden on mobile */}
+      <div className="hidden md:block">
+        <DemoTasksSidebar
+          checkInComplete={checkInComplete}
+          journalComplete={journalComplete}
+          habits={habits}
+          steps={steps}
+          onHabitToggle={handleSidebarHabitToggle}
+          onStepToggle={handleSidebarStepToggle}
+        />
+      </div>
+
       <PerfectDayCelebration 
         isActive={showPerfectDayCelebration} 
         onComplete={() => setShowPerfectDayCelebration(false)}
@@ -496,15 +546,20 @@ const DemoDashboard = () => {
             <DemoHabitTrackerCard 
               onCookieEarned={(desc) => handleAddCookie(desc, "habit")} 
               onHabitToggle={handleHabitComplete}
-              onHabitsChange={(count) => setTotalHabits(count)}
+              onHabitsChange={(count) => {
+                // Sync habits array length if needed
+              }}
             />
             <DemoTinyStepsCard 
               onCookieEarned={(desc) => handleAddCookie(desc, "step")}
               onStepToggle={(stepId, completed) => {
                 playClick();
                 setCompletedSteps(prev => ({ ...prev, [stepId]: completed }));
+                setSteps(prev => prev.map(s => s.id === stepId ? { ...s, completed } : s));
               }}
-              onStepsChange={(count) => setTotalSteps(count)}
+              onStepsChange={(count) => {
+                // Sync steps array length if needed
+              }}
             />
             <DemoCookieJarCard 
               cookies={allCookies.slice(0, 10)} 

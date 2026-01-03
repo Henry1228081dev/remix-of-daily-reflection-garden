@@ -115,18 +115,22 @@ const ShopItemCard = ({
         {/* Action Button */}
         <div className="mt-3">
           {isOwned ? (
-            (item.category === "avatar" || item.category === "theme" || item.category === "cursor") && !isEquipped ? (
+            (item.category === "avatar" || item.category === "theme" || item.category === "cursor") ? (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onEquip}
-                className="w-full py-2 rounded-lg bg-gradient-to-r from-primary to-sage-dark text-primary-foreground font-bold text-sm"
+                className={`w-full py-2 rounded-lg font-bold text-sm transition-all ${
+                  isEquipped 
+                    ? "bg-primary/20 text-primary border-2 border-primary/50 hover:bg-destructive/20 hover:text-destructive hover:border-destructive/50" 
+                    : "bg-gradient-to-r from-primary to-sage-dark text-primary-foreground"
+                }`}
               >
-                EQUIP
+                {isEquipped ? "UNEQUIP" : "EQUIP"}
               </motion.button>
             ) : (
               <div className="w-full py-2 rounded-lg bg-muted text-muted-foreground font-bold text-sm text-center">
-                {isEquipped ? "EQUIPPED ✓" : "OWNED ✓"}
+                OWNED ✓
               </div>
             )
           ) : canAfford ? (
