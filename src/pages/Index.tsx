@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
 import TinyStepsCard from "@/components/TinyStepsCard";
-import CookieJarCard from "@/components/CookieJarCard";
+import CookieJarCard, { CookieJarCardRef } from "@/components/CookieJarCard";
 import PastJournalsCard from "@/components/PastJournalsCard";
 import KindNotesCard from "@/components/KindNotesCard";
 import MoodTracker from "@/components/MoodTracker";
-import MoodChart from "@/components/MoodChart";
-import CheckInJournal from "@/components/CheckInJournal";
+import EnhancedMoodChart from "@/components/EnhancedMoodChart";
+import EnhancedCheckInJournal from "@/components/EnhancedCheckInJournal";
+import WeeklyReflectionSummary from "@/components/WeeklyReflectionSummary";
 import PerspectiveSwapButton from "@/components/PerspectiveSwapButton";
 import SafetyNote from "@/components/SafetyNote";
 
@@ -17,9 +18,16 @@ const Index = () => {
   const [showReflection, setShowReflection] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [journalKey, setJournalKey] = useState(0);
+  const [cookieCount, setCookieCount] = useState(0);
+  const cookieJarRef = useRef<CookieJarCardRef>(null);
 
   const handleJournalSave = () => {
     setJournalKey(prev => prev + 1);
+  };
+
+  const handleCookieUpdate = (count: number) => {
+    setCookieCount(count);
+    cookieJarRef.current?.refresh();
   };
 
   return (
@@ -33,7 +41,11 @@ const Index = () => {
           <div className="py-6 space-y-6">
             <MoodTracker onMoodSelect={setSelectedMood} />
             <ReflectionPrompts isVisible={showReflection} />
-            <CheckInJournal selectedMood={selectedMood} onSave={handleJournalSave} />
+            <EnhancedCheckInJournal 
+              selectedMood={selectedMood} 
+              onSave={handleJournalSave}
+              onCookieUpdate={handleCookieUpdate}
+            />
           </div>
         )}
 
@@ -48,14 +60,15 @@ const Index = () => {
         <div className="grid md:grid-cols-2 gap-6 py-6">
           {/* Left column */}
           <div className="space-y-6">
-            <TinyStepsCard />
-            <MoodChart key={journalKey} />
+            <WeeklyReflectionSummary key={`weekly-${journalKey}`} />
+            <EnhancedMoodChart key={`mood-${journalKey}`} />
             <PastJournalsCard key={`journal-${journalKey}`} />
           </div>
 
           {/* Right column */}
           <div className="space-y-6">
-            <CookieJarCard />
+            <TinyStepsCard />
+            <CookieJarCard ref={cookieJarRef} externalCount={cookieCount} />
             <KindNotesCard />
           </div>
         </div>
