@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { CheckIcon, ArrowRightIcon } from "lucide-react"
+import { CheckIcon, ArrowRightIcon, Eye, EyeOff } from "lucide-react"
 
 type Step = {
   id: number
@@ -26,6 +26,7 @@ export function MultiStepForm({ steps, onComplete, submitLabel = "Complete", isS
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isComplete, setIsComplete] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -130,14 +131,23 @@ export function MultiStepForm({ steps, onComplete, submitLabel = "Complete", isS
           <div className="relative">
             <Input
               id={currentStepData.field}
-              type={currentStepData.type || "text"}
+              type={currentStepData.type === "password" && showPassword ? "text" : (currentStepData.type || "text")}
               placeholder={currentStepData.placeholder}
               value={formData[currentStepData.field] || ""}
               onChange={(e) => handleInputChange(currentStepData.field, e.target.value)}
               onKeyDown={handleKeyDown}
               autoFocus
-              className="h-14 text-base transition-all duration-500 border-border/50 focus:border-foreground/20 bg-background/50 backdrop-blur"
+              className="h-14 text-base transition-all duration-500 border-border/50 focus:border-foreground/20 bg-background/50 backdrop-blur pr-12"
             />
+            {currentStepData.type === "password" && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            )}
           </div>
         </div>
 
