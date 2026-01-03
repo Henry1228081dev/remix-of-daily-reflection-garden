@@ -125,7 +125,17 @@ const Demo = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/demo/app">
-              <Button size="lg" variant="outline" className="rounded-full px-8 font-semibold">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="rounded-full px-8 font-semibold"
+                onClick={() => {
+                  // Request notification permission when clicking demo
+                  if ("Notification" in window && Notification.permission === "default") {
+                    Notification.requestPermission();
+                  }
+                }}
+              >
                 Try Demo Mode
               </Button>
             </Link>
