@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Target, Plus, X, Flame, TrendingUp } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
 import { useCookies } from "@/hooks/useCookies";
+import { useAutoPopulateFromSurvey } from "@/hooks/useOnboardingData";
+import { useTinySteps } from "@/hooks/useTinySteps";
 
 interface HabitTrackerCardProps {
   onCookieEarned?: (count: number) => void;
@@ -26,9 +28,29 @@ const HabitTrackerCard = ({ onCookieEarned }: HabitTrackerCardProps) => {
   } = useHabits();
   
   const { addCookie, totalCount } = useCookies();
+  const { steps: tinySteps, isLoading: stepsLoading, addStep } = useTinySteps();
   
   const [newHabit, setNewHabit] = useState("");
   const [showStats, setShowStats] = useState(false);
+
+  // Memoized add functions for auto-populate
+  const handleAddHabitForPopulate = useCallback((name: string) => {
+    addHabit.mutate(name);
+  }, [addHabit]);
+
+  const handleAddStepForPopulate = useCallback((text: string) => {
+    addStep.mutate(text);
+  }, [addStep]);
+
+  // Auto-populate from onboarding survey
+  useAutoPopulateFromSurvey(
+    handleAddHabitForPopulate,
+    handleAddStepForPopulate,
+    isLoading,
+    stepsLoading,
+    habits,
+    tinySteps
+  );
 
   const isCompletedToday = (habitId: string) => isCompletedOnDate(habitId, today);
 
