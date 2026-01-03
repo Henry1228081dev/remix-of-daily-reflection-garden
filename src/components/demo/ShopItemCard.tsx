@@ -5,7 +5,7 @@ export interface ShopItem {
   id: string;
   name: string;
   price: number;
-  category: "avatar" | "theme" | "badge" | "effect";
+  category: "avatar" | "theme" | "badge" | "effect" | "cursor";
   rarity: "common" | "rare" | "epic" | "legendary";
   emoji: string;
   description: string;
@@ -115,7 +115,7 @@ const ShopItemCard = ({
         {/* Action Button */}
         <div className="mt-3">
           {isOwned ? (
-            (item.category === "avatar" || item.category === "theme") && !isEquipped ? (
+            (item.category === "avatar" || item.category === "theme" || item.category === "cursor") && !isEquipped ? (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
