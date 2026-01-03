@@ -123,10 +123,10 @@ const LofiPlayer = () => {
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.9, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="fixed bottom-4 right-4 w-64 rounded-2xl bg-gradient-to-br from-amber-900/95 to-amber-950/95 backdrop-blur-xl border-2 border-amber-700/50 shadow-2xl p-4 z-50"
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            className="absolute top-14 right-0 w-52 rounded-xl bg-gradient-to-br from-amber-900/95 to-amber-950/95 backdrop-blur-xl border-2 border-amber-700/50 shadow-2xl p-3 z-50"
           >
             {/* Close button */}
             <button
@@ -137,30 +137,30 @@ const LofiPlayer = () => {
             </button>
 
             {/* Record Player Visual */}
-            <div className="flex flex-col items-center mb-4">
+            <div className="flex flex-col items-center mb-3">
               {/* Turntable */}
-              <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-zinc-900 to-zinc-800 border-4 border-amber-800/50 shadow-inner flex items-center justify-center">
+              <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-zinc-900 to-zinc-800 border-2 border-amber-800/50 shadow-inner flex items-center justify-center">
                 {/* Vinyl */}
                 <motion.div
                   animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
                   transition={isPlaying ? { duration: 3, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
-                  className="relative w-24 h-24 rounded-full bg-gradient-to-br from-zinc-950 to-zinc-900"
+                  className="relative w-16 h-16 rounded-full bg-gradient-to-br from-zinc-950 to-zinc-900"
                 >
                   {/* Grooves */}
-                  {[...Array(6)].map((_, i) => (
+                  {[...Array(4)].map((_, i) => (
                     <div 
                       key={i}
                       className="absolute rounded-full border border-zinc-700/20"
                       style={{
-                        inset: `${8 + i * 6}px`,
+                        inset: `${6 + i * 4}px`,
                       }}
                     />
                   ))}
                   
                   {/* Center Label */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary via-sage to-sage-dark flex items-center justify-center">
-                      <span className="text-[8px] font-bold text-primary-foreground">LOFI</span>
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary via-sage to-sage-dark flex items-center justify-center">
+                      <span className="text-[6px] font-bold text-primary-foreground">LOFI</span>
                     </div>
                   </div>
 
@@ -170,29 +170,29 @@ const LofiPlayer = () => {
 
                 {/* Tonearm */}
                 <motion.div
-                  animate={{ rotate: isPlaying ? 25 : 0 }}
+                  animate={{ rotate: isPlaying ? 20 : 0 }}
                   transition={{ duration: 0.5 }}
-                  className="absolute -top-2 right-0 origin-top-right"
+                  className="absolute -top-1 right-1 origin-top-right"
                   style={{ transformOrigin: "top right" }}
                 >
-                  <div className="w-1 h-16 bg-gradient-to-b from-zinc-400 to-zinc-600 rounded-full" />
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-3 bg-zinc-500 rounded-sm" />
+                  <div className="w-0.5 h-10 bg-gradient-to-b from-zinc-400 to-zinc-600 rounded-full" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-2 bg-zinc-500 rounded-sm" />
                 </motion.div>
               </div>
 
               {/* Track Name */}
-              <p className="mt-3 text-amber-100 font-medium text-sm">
+              <p className="mt-2 text-amber-100 font-medium text-xs">
                 {LOFI_TRACKS[currentTrackIndex].name}
               </p>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="flex items-center justify-center gap-3 mb-3">
               <button
                 onClick={() => changeTrack("prev")}
-                className="w-8 h-8 rounded-full bg-amber-800/50 hover:bg-amber-800 text-amber-100 flex items-center justify-center transition-colors"
+                className="w-6 h-6 rounded-full bg-amber-800/50 hover:bg-amber-800 text-amber-100 flex items-center justify-center transition-colors"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3 h-3" />
               </button>
 
               <motion.button
@@ -200,35 +200,35 @@ const LofiPlayer = () => {
                 disabled={isLoading}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-sage-dark text-primary-foreground flex items-center justify-center shadow-lg"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-sage-dark text-primary-foreground flex items-center justify-center shadow-lg"
               >
                 {isLoading ? (
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
+                    className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
                   />
                 ) : isPlaying ? (
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-5 bg-primary-foreground rounded-full" />
-                    <div className="w-1.5 h-5 bg-primary-foreground rounded-full" />
+                  <div className="flex gap-0.5">
+                    <div className="w-1 h-4 bg-primary-foreground rounded-full" />
+                    <div className="w-1 h-4 bg-primary-foreground rounded-full" />
                   </div>
                 ) : (
-                  <div className="w-0 h-0 border-l-[10px] border-l-primary-foreground border-y-[6px] border-y-transparent ml-1" />
+                  <div className="w-0 h-0 border-l-[8px] border-l-primary-foreground border-y-[5px] border-y-transparent ml-0.5" />
                 )}
               </motion.button>
 
               <button
                 onClick={() => changeTrack("next")}
-                className="w-8 h-8 rounded-full bg-amber-800/50 hover:bg-amber-800 text-amber-100 flex items-center justify-center transition-colors"
+                className="w-6 h-6 rounded-full bg-amber-800/50 hover:bg-amber-800 text-amber-100 flex items-center justify-center transition-colors"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3 h-3" />
               </button>
             </div>
 
             {/* Volume Control */}
-            <div className="flex items-center gap-3 px-2">
-              <VolumeX className="w-4 h-4 text-amber-300/70" />
+            <div className="flex items-center gap-2 px-1">
+              <VolumeX className="w-3 h-3 text-amber-300/70" />
               <Slider
                 value={[volume]}
                 onValueChange={(val) => setVolume(val[0])}
@@ -236,7 +236,7 @@ const LofiPlayer = () => {
                 step={5}
                 className="flex-1"
               />
-              <Volume2 className="w-4 h-4 text-amber-300/70" />
+              <Volume2 className="w-3 h-3 text-amber-300/70" />
             </div>
           </motion.div>
         )}
