@@ -5,7 +5,6 @@ import { Leaf, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -13,12 +12,9 @@ import { toast } from "@/hooks/use-toast";
 
 interface UserProfile {
   intent: string[];
-  currentHabits: string[];
   habitToBuild: string;
   stepPreference: string;
-  currentChallenge: string;
   obstacles: string[];
-  hobbies: string;
   reflectionStyle: string;
   consentGiven: boolean;
   completedAt: string;
@@ -30,18 +26,6 @@ const INTENT_OPTIONS = [
   "I'm looking to start journaling",
   "I need help managing stress or anxiety",
   "I want to be more intentional with my day",
-];
-
-const CURRENT_HABITS_OPTIONS = [
-  "Drink water",
-  "Exercise/movement",
-  "Meditation or breathing exercises",
-  "Reading",
-  "Creative activities",
-  "Social connection",
-  "Journaling or reflection",
-  "Sleep consistency",
-  "None of the above",
 ];
 
 const STEP_PREFERENCE_OPTIONS = [
@@ -72,17 +56,14 @@ const OnboardingSurvey = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Partial<UserProfile>>({
     intent: [],
-    currentHabits: [],
     habitToBuild: "",
     stepPreference: "",
-    currentChallenge: "",
     obstacles: [],
-    hobbies: "",
     reflectionStyle: "",
     consentGiven: false,
   });
 
-  const totalQuestions = 9;
+  const totalQuestions = 6;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
 
   const canProceed = (): boolean => {
@@ -90,20 +71,14 @@ const OnboardingSurvey = () => {
       case 0:
         return (answers.intent?.length || 0) > 0;
       case 1:
-        return (answers.currentHabits?.length || 0) > 0;
-      case 2:
         return (answers.habitToBuild?.length || 0) >= 5 && (answers.habitToBuild?.length || 0) <= 100;
-      case 3:
+      case 2:
         return !!answers.stepPreference;
-      case 4:
-        return (answers.currentChallenge?.length || 0) >= 10 && (answers.currentChallenge?.length || 0) <= 300;
-      case 5:
+      case 3:
         return (answers.obstacles?.length || 0) > 0 && (answers.obstacles?.length || 0) <= 2;
-      case 6:
-        return (answers.hobbies?.length || 0) >= 3;
-      case 7:
+      case 4:
         return !!answers.reflectionStyle;
-      case 8:
+      case 5:
         return answers.consentGiven === true;
       default:
         return false;
@@ -127,12 +102,9 @@ const OnboardingSurvey = () => {
   const completeSurvey = () => {
     const profile: UserProfile = {
       intent: answers.intent || [],
-      currentHabits: answers.currentHabits || [],
       habitToBuild: answers.habitToBuild || "",
       stepPreference: answers.stepPreference || "",
-      currentChallenge: answers.currentChallenge || "",
       obstacles: answers.obstacles || [],
-      hobbies: answers.hobbies || "",
       reflectionStyle: answers.reflectionStyle || "",
       consentGiven: answers.consentGiven || false,
       completedAt: new Date().toISOString(),
@@ -149,7 +121,7 @@ const OnboardingSurvey = () => {
     navigate("/");
   };
 
-  const toggleArrayItem = (key: "intent" | "currentHabits" | "obstacles", item: string, maxItems?: number) => {
+  const toggleArrayItem = (key: "intent" | "obstacles", item: string, maxItems?: number) => {
     setAnswers(prev => {
       const current = prev[key] || [];
       if (current.includes(item)) {
@@ -196,34 +168,6 @@ const OnboardingSurvey = () => {
       case 1:
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground">Which of these do you already do daily?</h2>
-            <p className="text-muted-foreground">It's okay if the answer is none — we're here to help you build!</p>
-            <div className="space-y-3 pt-4">
-              {CURRENT_HABITS_OPTIONS.map((option) => (
-                <motion.div
-                  key={option}
-                  whileTap={{ scale: 0.98 }}
-                  className={`flex items-center space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                    answers.currentHabits?.includes(option)
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
-                  }`}
-                  onClick={() => toggleArrayItem("currentHabits", option)}
-                >
-                  <Checkbox
-                    checked={answers.currentHabits?.includes(option)}
-                    className="pointer-events-none"
-                  />
-                  <span className="text-foreground">{option}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">What's one habit you'd like to build in the next month?</h2>
             <p className="text-muted-foreground">Start with something gentle — small steps lead to big changes</p>
             <div className="pt-4">
@@ -241,7 +185,7 @@ const OnboardingSurvey = () => {
           </div>
         );
 
-      case 3:
+      case 2:
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">How do you prefer to break down goals?</h2>
@@ -270,27 +214,7 @@ const OnboardingSurvey = () => {
           </div>
         );
 
-      case 4:
-        return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground">What's one task or habit you're currently struggling with?</h2>
-            <p className="text-muted-foreground">No judgment here — we all have our challenges</p>
-            <div className="pt-4">
-              <Textarea
-                placeholder="Share what's been on your mind..."
-                value={answers.currentChallenge || ""}
-                onChange={(e) => setAnswers(prev => ({ ...prev, currentChallenge: e.target.value }))}
-                className="text-lg p-4 rounded-xl min-h-[150px] resize-none"
-                maxLength={300}
-              />
-              <p className="text-sm text-muted-foreground mt-2">
-                {answers.currentChallenge?.length || 0}/300 characters
-              </p>
-            </div>
-          </div>
-        );
-
-      case 5:
+      case 3:
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">What usually stops you from following through?</h2>
@@ -323,23 +247,7 @@ const OnboardingSurvey = () => {
           </div>
         );
 
-      case 6:
-        return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground">What are 2-3 things that make you feel good?</h2>
-            <p className="text-muted-foreground">These help us personalize your Kind Notes</p>
-            <div className="pt-4">
-              <Input
-                placeholder="e.g., Gaming, cooking, talking to friends"
-                value={answers.hobbies || ""}
-                onChange={(e) => setAnswers(prev => ({ ...prev, hobbies: e.target.value }))}
-                className="text-lg p-6 rounded-xl"
-              />
-            </div>
-          </div>
-        );
-
-      case 7:
+      case 4:
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">How do you usually reflect on your day?</h2>
@@ -368,7 +276,7 @@ const OnboardingSurvey = () => {
           </div>
         );
 
-      case 8:
+      case 5:
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold text-foreground">Almost there! 🌱</h2>
@@ -404,15 +312,6 @@ const OnboardingSurvey = () => {
     }
   };
 
-  const getEncouragingFeedback = () => {
-    if (currentQuestion === 1 && (answers.currentHabits?.length || 0) > 0 && !answers.currentHabits?.includes("None of the above")) {
-      return `Great! You're already doing ${answers.currentHabits?.length} healthy habit${(answers.currentHabits?.length || 0) > 1 ? "s" : ""}. Let's build on that! 💪`;
-    }
-    return null;
-  };
-
-  const feedback = getEncouragingFeedback();
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -443,16 +342,6 @@ const OnboardingSurvey = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               {renderQuestion()}
-              
-              {feedback && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 p-4 bg-primary/10 rounded-xl text-primary text-sm"
-                >
-                  {feedback}
-                </motion.div>
-              )}
             </motion.div>
           </AnimatePresence>
         </div>
