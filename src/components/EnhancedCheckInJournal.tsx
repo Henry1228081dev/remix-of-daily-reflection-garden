@@ -1,22 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Check, Cookie, Sparkles } from "lucide-react";
 import KindNoteNotification from "./KindNoteNotification";
 import { supabase } from "@/integrations/supabase/client";
-
-const STORAGE_KEY = "reflect-journal-entries";
-const COOKIE_STORAGE_KEY = "reflect-cookie-jar";
-
-interface JournalEntry {
-  date: string;
-  timestamp?: string;
-  entry: string;
-  prompt?: string;
-  mood?: string;
-  cookiesEarned?: number;
-}
+import { useJournalEntries } from "@/hooks/useJournalEntries";
+import { useCookies } from "@/hooks/useCookies";
 
 const prompts = [
   "What's one thing you're grateful for today?",
@@ -63,16 +53,14 @@ const countValidSentences = (text: string): number => {
 };
 
 const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: EnhancedCheckInJournalProps) => {
-  const today = new Date().toDateString();
+  const today = new Date().toISOString().split("T")[0];
   
-  const [entries, setEntries] = useState<JournalEntry[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { getTodayEntry, upsertEntry } = useJournalEntries();
+  const { addCookie, totalCount } = useCookies();
   
-  const todayEntry = entries.find(e => e.date === today);
+  const todayEntry = getTodayEntry();
   const [entry, setEntry] = useState(todayEntry?.entry || "");
-  const [currentPrompt, setCurrentPrompt] = useState(() => {
+  const [currentPrompt] = useState(() => {
     return todayEntry?.prompt || prompts[Math.floor(Math.random() * prompts.length)];
   });
   const [saved, setSaved] = useState(false);
@@ -81,27 +69,33 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Track sentence counts: baseline is what was already saved, current is live count
-  const baselineSentenceCount = useRef(todayEntry?.cookiesEarned ?? countValidSentences(todayEntry?.entry || ""));
+  const baselineSentenceCount = useRef(todayEntry?.cookies_earned ?? countValidSentences(todayEntry?.entry || ""));
   const [currentSentenceCount, setCurrentSentenceCount] = useState(() => 
     countValidSentences(todayEntry?.entry || "")
   );
   const [sessionCookiesEarned, setSessionCookiesEarned] = useState(0);
   const isGeneratingNote = useRef(false);
 
+  useEffect(() => {
+    if (todayEntry?.entry && !entry) {
+      setEntry(todayEntry.entry);
+      setCurrentSentenceCount(countValidSentences(todayEntry.entry));
+      baselineSentenceCount.current = todayEntry.cookies_earned ?? countValidSentences(todayEntry.entry);
+    }
+  }, [todayEntry]);
+
   const addCookiesToJar = useCallback((count: number) => {
     if (count <= 0) return;
     
-    const savedCookies = localStorage.getItem(COOKIE_STORAGE_KEY);
-    const cookies: string[] = savedCookies ? JSON.parse(savedCookies) : [];
-    
     for (let i = 0; i < count; i++) {
       const timestamp = new Date().toLocaleTimeString();
-      cookies.push(`Journal reflection (${timestamp})`);
+      addCookie.mutate({ 
+        description: `Journal reflection (${timestamp})`, 
+        source: "journal" 
+      });
     }
-    
-    localStorage.setItem(COOKIE_STORAGE_KEY, JSON.stringify(cookies));
-    onCookieUpdate?.(cookies.length);
-  }, [onCookieUpdate]);
+    onCookieUpdate?.(totalCount + count);
+  }, [addCookie, totalCount, onCookieUpdate]);
 
   const generateKindNote = useCallback(async (text: string, sentenceCount: number) => {
     if (isGeneratingNote.current || sentenceCount === 0) return;
@@ -134,10 +128,6 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
     }
   }, [selectedMood]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }, [entries]);
-
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setEntry(newText);
@@ -158,21 +148,14 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
 
   const saveEntry = () => {
     if (entry.trim()) {
-      const now = new Date();
-      const totalCookies = (todayEntry?.cookiesEarned ?? 0) + sessionCookiesEarned;
+      const totalCookies = (todayEntry?.cookies_earned ?? 0) + sessionCookiesEarned;
       
-      const newEntry: JournalEntry = {
+      upsertEntry.mutate({
         date: today,
-        timestamp: now.toISOString(),
         entry: entry.trim(),
-        prompt: currentPrompt || undefined,
+        prompt: currentPrompt,
         mood: selectedMood || undefined,
-        cookiesEarned: totalCookies,
-      };
-      
-      setEntries(prev => {
-        const filtered = prev.filter(e => e.date !== today);
-        return [...filtered, newEntry];
+        cookies_earned: totalCookies,
       });
       
       // Update baseline after save so further edits don't double-count
@@ -257,13 +240,15 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
               variant="wellness" 
               size="sm"
               onClick={saveEntry}
-              disabled={!entry.trim()}
+              disabled={!entry.trim() || upsertEntry.isPending}
             >
               {saved ? (
                 <>
                   <Check className="w-4 h-4" />
                   Saved!
                 </>
+              ) : upsertEntry.isPending ? (
+                "Saving..."
               ) : (
                 "Save entry"
               )}

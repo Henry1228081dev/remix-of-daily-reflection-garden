@@ -19,7 +19,7 @@ const Header = () => {
       });
     } else {
       localStorage.removeItem("surveyCompleted");
-      navigate("/auth", { replace: true });
+      navigate("/", { replace: true });
       toast({
         title: "See you soon! 🌿",
         description: "Take care of yourself.",
