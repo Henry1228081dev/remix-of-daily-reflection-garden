@@ -148,7 +148,7 @@ const PerspectiveSwap = () => {
         {/* Safety note */}
         <footer className="text-center py-8 animate-fade-in">
           <p className="text-sm text-muted-foreground">
-            ⚠️ This tool is for reflection and self-awareness — not diagnosis or therapy. 💚
+            ⚠️ This tool is for reflection and self-awareness, not diagnosis or therapy. 💚
           </p>
         </footer>
       </div>

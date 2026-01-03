@@ -83,7 +83,7 @@ const MoodChart = () => {
         {!hasAnyMood ? (
           <div className="text-center py-6">
             <p className="text-muted-foreground italic">
-              No mood data yet — start checking in to see your patterns 🌱
+              No mood data yet. Start checking in to see your patterns 🌱
             </p>
           </div>
         ) : (

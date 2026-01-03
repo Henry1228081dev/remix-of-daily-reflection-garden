@@ -54,14 +54,14 @@ const PastJournalsCard = () => {
           Past journal entries
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          A look back at your reflections — one day at a time.
+          A look back at your reflections, one day at a time.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
         {entries.length === 0 ? (
           <div className="text-center py-6">
             <p className="text-muted-foreground italic">
-              You haven't written any journal entries yet — your story starts today 🌱
+              You haven't written any journal entries yet. Your story starts today 🌱
             </p>
           </div>
         ) : (
