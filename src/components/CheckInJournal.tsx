@@ -10,6 +10,7 @@ interface JournalEntry {
   date: string;
   entry: string;
   prompt?: string;
+  mood?: string;
 }
 
 const prompts = [
@@ -23,8 +24,13 @@ const prompts = [
   "What's something that felt hard today, and how did you cope?",
 ];
 
-const JournalCard = () => {
+interface CheckInJournalProps {
+  selectedMood?: string | null;
+}
+
+const CheckInJournal = ({ selectedMood }: CheckInJournalProps) => {
   const today = new Date().toDateString();
+  
   const [entries, setEntries] = useState<JournalEntry[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -50,6 +56,7 @@ const JournalCard = () => {
         date: today,
         entry: entry.trim(),
         prompt: currentPrompt || undefined,
+        mood: selectedMood || undefined,
       };
       
       setEntries(prev => {
@@ -63,7 +70,7 @@ const JournalCard = () => {
   };
 
   return (
-    <Card className="bg-card shadow-card border-0 animate-fade-in-up stagger-5">
+    <Card className="bg-card shadow-card border-0 animate-fade-in-up">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-primary" />
@@ -118,4 +125,4 @@ const JournalCard = () => {
   );
 };
 
-export default JournalCard;
+export default CheckInJournal;
