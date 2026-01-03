@@ -7,6 +7,7 @@ const STORAGE_KEY = "reflect-journal-entries";
 
 interface JournalEntry {
   date: string;
+  timestamp?: string;
   entry: string;
   prompt?: string;
   mood?: string;
@@ -37,8 +38,12 @@ const PastJournalsCard = () => {
     }
   }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string, timestamp?: string) => {
     try {
+      if (timestamp) {
+        const date = new Date(timestamp);
+        return format(date, "MMMM d, yyyy 'at' h:mm a");
+      }
       const date = new Date(dateString);
       return format(date, "MMMM d, yyyy");
     } catch {
@@ -74,7 +79,7 @@ const PastJournalsCard = () => {
               >
                 <div className="flex items-center gap-2 text-sm text-sage-dark mb-2">
                   <Calendar className="w-4 h-4" />
-                  <span className="font-medium">{formatDate(entry.date)}</span>
+                  <span className="font-medium">{formatDate(entry.date, entry.timestamp)}</span>
                   {entry.mood && (
                     <span className="ml-auto text-lg" title={`Mood: ${entry.mood}`}>
                       {moodEmojis[entry.mood] || entry.mood}

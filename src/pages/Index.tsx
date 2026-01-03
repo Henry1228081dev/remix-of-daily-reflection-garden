@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
 import TinyStepsCard from "@/components/TinyStepsCard";
+import HabitTrackerCard from "@/components/HabitTrackerCard";
 import CookieJarCard, { CookieJarCardRef } from "@/components/CookieJarCard";
 import PastJournalsCard from "@/components/PastJournalsCard";
 import KindNotesCard from "@/components/KindNotesCard";
@@ -67,6 +68,10 @@ const Index = () => {
 
           {/* Right column */}
           <div className="space-y-6">
+            <HabitTrackerCard onCookieEarned={(count) => {
+              setCookieCount(count);
+              cookieJarRef.current?.refresh();
+            }} />
             <TinyStepsCard onCookieEarned={(count) => {
               setCookieCount(count);
               cookieJarRef.current?.refresh();
