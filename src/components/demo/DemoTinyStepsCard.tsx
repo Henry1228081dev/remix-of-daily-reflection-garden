@@ -13,15 +13,15 @@ interface DemoTinyStepsCardProps {
 
 const DemoTinyStepsCard = ({ onCookieEarned, onStepToggle, onStepsChange }: DemoTinyStepsCardProps) => {
   const [steps, setSteps] = useState([
-    { id: "1", text: "Drink a glass of water", completed: true },
-    { id: "2", text: "Take 3 deep breaths", completed: false },
-    { id: "3", text: "Stretch for 2 minutes", completed: false },
+    { id: "1", text: "Drink a glass of water", completed: true, cookieAwarded: true },
+    { id: "2", text: "Take 3 deep breaths", completed: false, cookieAwarded: false },
+    { id: "3", text: "Stretch for 2 minutes", completed: false, cookieAwarded: false },
   ]);
   const [newStep, setNewStep] = useState("");
 
   const addStep = () => {
     if (newStep.trim()) {
-      const newSteps = [...steps, { id: Date.now().toString(), text: newStep.trim(), completed: false }];
+      const newSteps = [...steps, { id: Date.now().toString(), text: newStep.trim(), completed: false, cookieAwarded: false }];
       setSteps(newSteps);
       setNewStep("");
       onStepsChange?.(newSteps.length);
@@ -32,8 +32,11 @@ const DemoTinyStepsCard = ({ onCookieEarned, onStepToggle, onStepsChange }: Demo
     setSteps(prev => prev.map(step => {
       if (step.id === id) {
         const newCompleted = !step.completed;
-        if (newCompleted && !step.completed) {
+        // Only award cookie once per step, and only when completing (not uncompleting)
+        if (newCompleted && !step.cookieAwarded) {
           onCookieEarned(`Completed: ${step.text}`);
+          onStepToggle?.(id, newCompleted);
+          return { ...step, completed: newCompleted, cookieAwarded: true };
         }
         onStepToggle?.(id, newCompleted);
         return { ...step, completed: newCompleted };

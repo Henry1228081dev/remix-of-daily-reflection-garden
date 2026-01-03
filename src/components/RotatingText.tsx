@@ -24,15 +24,15 @@ const RotatingText = () => {
   }, []);
 
   return (
-    <span className="inline-block relative">
+    <span className="inline-flex items-baseline h-[1.2em] overflow-hidden align-bottom">
       <AnimatePresence mode="wait">
         <motion.span
           key={currentIndex}
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
+          initial={{ y: "100%", opacity: 0 }}
+          animate={{ y: "0%", opacity: 1 }}
+          exit={{ y: "-100%", opacity: 0 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="inline-block italic text-primary"
+          className="inline-block italic text-primary whitespace-nowrap"
         >
           {words[currentIndex]}
         </motion.span>
