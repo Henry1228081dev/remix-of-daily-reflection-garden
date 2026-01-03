@@ -67,7 +67,10 @@ const Index = () => {
 
           {/* Right column */}
           <div className="space-y-6">
-            <TinyStepsCard />
+            <TinyStepsCard onCookieEarned={(count) => {
+              setCookieCount(count);
+              cookieJarRef.current?.refresh();
+            }} />
             <CookieJarCard ref={cookieJarRef} externalCount={cookieCount} />
             <KindNotesCard />
           </div>
