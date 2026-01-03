@@ -123,10 +123,10 @@ const LofiPlayer = () => {
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, x: 10 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.9, x: 10 }}
-            className="absolute top-0 right-14 w-64 rounded-2xl bg-gradient-to-br from-amber-900/95 to-amber-950/95 backdrop-blur-xl border-2 border-amber-700/50 shadow-2xl p-4 z-50"
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="fixed bottom-4 right-4 w-64 rounded-2xl bg-gradient-to-br from-amber-900/95 to-amber-950/95 backdrop-blur-xl border-2 border-amber-700/50 shadow-2xl p-4 z-50"
           >
             {/* Close button */}
             <button
