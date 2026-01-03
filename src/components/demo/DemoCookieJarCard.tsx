@@ -105,7 +105,7 @@ const DemoCookieJarCard = ({
           >
             <Button 
               onClick={onOpenShop}
-              className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white font-bold shadow-lg"
+              className="w-full bg-gradient-to-r from-primary via-sage-dark to-primary hover:from-sage-dark hover:via-primary hover:to-sage-dark text-primary-foreground font-bold shadow-lg"
               size="lg"
             >
               <ShoppingBag className="w-5 h-5 mr-2" />
