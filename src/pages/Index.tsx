@@ -8,6 +8,7 @@ import CookieJarCard from "@/components/CookieJarCard";
 import PastJournalsCard from "@/components/PastJournalsCard";
 import KindNotesCard from "@/components/KindNotesCard";
 import MoodTracker from "@/components/MoodTracker";
+import MoodChart from "@/components/MoodChart";
 import CheckInJournal from "@/components/CheckInJournal";
 import PerspectiveSwapButton from "@/components/PerspectiveSwapButton";
 import SafetyNote from "@/components/SafetyNote";
@@ -48,7 +49,8 @@ const Index = () => {
           {/* Left column */}
           <div className="space-y-6">
             <TinyStepsCard />
-            <PastJournalsCard key={journalKey} />
+            <MoodChart key={journalKey} />
+            <PastJournalsCard key={`journal-${journalKey}`} />
           </div>
 
           {/* Right column */}
