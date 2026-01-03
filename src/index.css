@@ -119,6 +119,96 @@
     --sidebar-border: 150 15% 25%;
     --sidebar-ring: 143 30% 60%;
   }
+
+  /* Demo Theme: Sunset Vibes */
+  .theme-sunset {
+    --background: 20 40% 96%;
+    --foreground: 20 30% 20%;
+    --card: 20 50% 98%;
+    --card-foreground: 20 30% 20%;
+    --primary: 20 70% 60%;
+    --primary-foreground: 20 10% 98%;
+    --secondary: 350 40% 92%;
+    --secondary-foreground: 350 30% 30%;
+    --muted: 20 30% 92%;
+    --muted-foreground: 20 20% 45%;
+    --accent: 350 50% 90%;
+    --accent-foreground: 350 40% 35%;
+    --border: 20 30% 88%;
+    --ring: 20 70% 60%;
+  }
+
+  /* Demo Theme: Ocean Calm */
+  .theme-ocean {
+    --background: 200 40% 96%;
+    --foreground: 200 30% 20%;
+    --card: 200 50% 98%;
+    --card-foreground: 200 30% 20%;
+    --primary: 200 70% 50%;
+    --primary-foreground: 200 10% 98%;
+    --secondary: 180 40% 90%;
+    --secondary-foreground: 180 30% 30%;
+    --muted: 200 30% 92%;
+    --muted-foreground: 200 20% 45%;
+    --accent: 180 40% 88%;
+    --accent-foreground: 180 40% 30%;
+    --border: 200 30% 88%;
+    --ring: 200 70% 50%;
+  }
+
+  /* Demo Theme: Forest Dream */
+  .theme-forest {
+    --background: 140 30% 95%;
+    --foreground: 140 30% 18%;
+    --card: 140 40% 97%;
+    --card-foreground: 140 30% 18%;
+    --primary: 140 50% 40%;
+    --primary-foreground: 140 10% 98%;
+    --secondary: 120 30% 88%;
+    --secondary-foreground: 120 30% 25%;
+    --muted: 140 25% 90%;
+    --muted-foreground: 140 20% 45%;
+    --accent: 80 40% 88%;
+    --accent-foreground: 80 40% 30%;
+    --border: 140 25% 85%;
+    --ring: 140 50% 40%;
+  }
+
+  /* Demo Theme: Midnight Mode */
+  .theme-midnight {
+    --background: 250 25% 12%;
+    --foreground: 250 20% 92%;
+    --card: 250 22% 16%;
+    --card-foreground: 250 20% 92%;
+    --primary: 270 60% 65%;
+    --primary-foreground: 270 10% 10%;
+    --secondary: 250 20% 22%;
+    --secondary-foreground: 250 20% 90%;
+    --muted: 250 20% 20%;
+    --muted-foreground: 250 15% 60%;
+    --accent: 270 30% 25%;
+    --accent-foreground: 270 30% 85%;
+    --border: 250 20% 25%;
+    --ring: 270 60% 65%;
+  }
+
+  /* Demo Theme: Aurora Borealis */
+  .theme-aurora {
+    --background: 180 30% 95%;
+    --foreground: 200 30% 18%;
+    --card: 180 40% 97%;
+    --card-foreground: 200 30% 18%;
+    --primary: 160 60% 50%;
+    --primary-foreground: 160 10% 98%;
+    --secondary: 280 40% 92%;
+    --secondary-foreground: 280 30% 30%;
+    --muted: 200 25% 90%;
+    --muted-foreground: 200 20% 45%;
+    --accent: 320 40% 90%;
+    --accent-foreground: 320 40% 30%;
+    --border: 180 25% 85%;
+    --ring: 160 60% 50%;
+  }
 }
 
 @layer base {
