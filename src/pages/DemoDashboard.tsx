@@ -14,12 +14,14 @@ import DemoKindNotesCard from "@/components/demo/DemoKindNotesCard";
 import DemoMoodTracker from "@/components/demo/DemoMoodTracker";
 import DemoMoodChart from "@/components/demo/DemoMoodChart";
 import DemoCheckInJournal from "@/components/demo/DemoCheckInJournal";
-import DemoWeeklyReflection from "@/components/demo/DemoWeeklyReflection";
+import DemoWeeklyStreak from "@/components/demo/DemoWeeklyStreak";
 import DemoCookieShop from "@/components/demo/DemoCookieShop";
+import DemoPerspectiveSwap from "@/components/demo/DemoPerspectiveSwap";
 import CursorEffects from "@/components/demo/CursorEffects";
-import PerspectiveSwapButton from "@/components/PerspectiveSwapButton";
 import SafetyNote from "@/components/SafetyNote";
 import { useConfetti } from "@/hooks/useConfetti";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
+import { useDemoNotifications } from "@/hooks/useDemoNotifications";
 import { ShopItem } from "@/components/demo/ShopItemCard";
 import { toast } from "sonner";
 
@@ -37,6 +39,12 @@ const DemoDashboard = () => {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [showBanner, setShowBanner] = useState(true);
   const [showShop, setShowShop] = useState(false);
+  
+  // Track completed habits and steps for streak
+  const [completedHabits, setCompletedHabits] = useState<Record<string, boolean>>({});
+  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
+  const [totalHabits, setTotalHabits] = useState(3);
+  const [totalSteps, setTotalSteps] = useState(3);
   
   // Start with 50 cookies for demo - enough to buy stuff!
   const [cookies, setCookies] = useState([
@@ -75,6 +83,16 @@ const DemoDashboard = () => {
   const availableBalance = cookieBalance - spentCookies;
 
   const { celebrateMilestone, celebratePurchase } = useConfetti();
+  const { playCookieEarned, playPurchase, playEquip, playClick, playSuccess } = useSoundEffects();
+
+  // Demo notifications - ask for permission on load, mood prompt after 10s
+  useDemoNotifications({
+    onMoodSelect: (mood) => {
+      setSelectedMood(mood);
+      playSuccess();
+    },
+    enabled: true,
+  });
 
   const handleAddCookie = (description: string, source: string) => {
     const newCookie = {
@@ -84,6 +102,9 @@ const DemoDashboard = () => {
       source
     };
     setCookies(prev => [...prev, newCookie]);
+    
+    // Play sound effect
+    playCookieEarned();
     
     // Check for milestone celebrations
     const newCount = cookies.length + 1;
@@ -103,6 +124,7 @@ const DemoDashboard = () => {
       setSpentCookies(prev => prev + item.price);
       setOwnedItems(prev => [...prev, item.id]);
       celebratePurchase();
+      playPurchase();
       toast.success(`🎁 Purchased ${item.name}!`);
       
       // Auto-equip if it's the first avatar/theme/cursor
@@ -118,17 +140,24 @@ const DemoDashboard = () => {
     }
   };
 
-  const handleEquip = (itemId: string, type: "avatar" | "theme" | "cursor") => {
+  const handleEquip = (itemId: string | null, type: "avatar" | "theme" | "cursor") => {
+    playEquip();
+    
     if (type === "avatar") {
       setEquippedAvatar(itemId);
-      toast.success("Avatar equipped!");
+      toast.success(itemId ? "Avatar equipped!" : "Avatar unequipped!");
     } else if (type === "theme") {
       setEquippedTheme(itemId);
-      toast.success("Theme applied! 🎨");
+      toast.success(itemId ? "Theme applied! 🎨" : "Theme reset to default! 🌿");
     } else {
       setEquippedCursor(itemId);
-      toast.success("Cursor equipped! 🖱️");
+      toast.success(itemId ? "Cursor equipped! 🖱️" : "Cursor reset!");
     }
+  };
+
+  const handleResetTheme = () => {
+    playClick();
+    handleEquip(null, "theme");
   };
 
   // Apply theme class to document when equipped theme changes
@@ -176,7 +205,10 @@ const DemoDashboard = () => {
                 <span className="font-bold text-amber-700 dark:text-amber-300">{availableBalance}</span>
               </div>
               <button 
-                onClick={() => setShowBanner(false)}
+                onClick={() => {
+                  playClick();
+                  setShowBanner(false);
+                }}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -197,18 +229,24 @@ const DemoDashboard = () => {
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/auth">
-              <Button size="sm" className="rounded-full">
+              <Button size="sm" className="rounded-full" onClick={playClick}>
                 Sign Up Free
               </Button>
             </Link>
           </div>
         </header>
         
-        <HeroSection onStartCheckIn={() => setShowReflection(true)} />
+        <HeroSection onStartCheckIn={() => {
+          playClick();
+          setShowReflection(true);
+        }} />
         
         {showReflection && (
           <div className="py-6 space-y-6">
-            <DemoMoodTracker onMoodSelect={setSelectedMood} />
+            <DemoMoodTracker onMoodSelect={(mood) => {
+              playClick();
+              setSelectedMood(mood);
+            }} />
             <ReflectionPrompts isVisible={showReflection} />
             <DemoCheckInJournal 
               selectedMood={selectedMood} 
@@ -227,18 +265,40 @@ const DemoDashboard = () => {
         {/* Two column layout */}
         <div className="grid md:grid-cols-2 gap-6 py-6">
           <div className="space-y-6">
-            <DemoWeeklyReflection />
+            <DemoWeeklyStreak 
+              completedHabits={completedHabits}
+              completedSteps={completedSteps}
+              totalHabits={totalHabits}
+              totalSteps={totalSteps}
+            />
             <DemoMoodChart />
             <DemoPastJournalsCard />
           </div>
 
           <div className="space-y-6">
-            <DemoHabitTrackerCard onCookieEarned={(desc) => handleAddCookie(desc, "habit")} />
-            <DemoTinyStepsCard onCookieEarned={(desc) => handleAddCookie(desc, "step")} />
+            <DemoHabitTrackerCard 
+              onCookieEarned={(desc) => handleAddCookie(desc, "habit")} 
+              onHabitToggle={(habitId, completed) => {
+                playClick();
+                setCompletedHabits(prev => ({ ...prev, [habitId]: completed }));
+              }}
+              onHabitsChange={(count) => setTotalHabits(count)}
+            />
+            <DemoTinyStepsCard 
+              onCookieEarned={(desc) => handleAddCookie(desc, "step")}
+              onStepToggle={(stepId, completed) => {
+                playClick();
+                setCompletedSteps(prev => ({ ...prev, [stepId]: completed }));
+              }}
+              onStepsChange={(count) => setTotalSteps(count)}
+            />
             <DemoCookieJarCard 
               cookies={allCookies.slice(0, 10)} 
               totalBalance={availableBalance}
-              onOpenShop={() => setShowShop(true)}
+              onOpenShop={() => {
+                playClick();
+                setShowShop(true);
+              }}
               ownedItemsCount={ownedItems.length}
               equippedAvatar={equippedAvatar}
             />
@@ -246,7 +306,10 @@ const DemoDashboard = () => {
           </div>
         </div>
 
-        <PerspectiveSwapButton />
+        {/* Static Perspective Swap - no AI credits */}
+        <div className="py-6 max-w-2xl mx-auto">
+          <DemoPerspectiveSwap onShow={playClick} />
+        </div>
         
         <SafetyNote />
       </div>
@@ -254,7 +317,10 @@ const DemoDashboard = () => {
       {/* Cookie Shop Modal */}
       <DemoCookieShop
         isOpen={showShop}
-        onClose={() => setShowShop(false)}
+        onClose={() => {
+          playClick();
+          setShowShop(false);
+        }}
         cookieBalance={availableBalance}
         onPurchase={handlePurchase}
         ownedItems={ownedItems}
@@ -262,6 +328,7 @@ const DemoDashboard = () => {
         equippedTheme={equippedTheme}
         equippedCursor={equippedCursor}
         onEquip={handleEquip}
+        onResetTheme={handleResetTheme}
       />
 
       {/* Cursor Effects */}

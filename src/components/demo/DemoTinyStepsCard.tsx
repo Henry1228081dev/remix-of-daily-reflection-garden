@@ -7,9 +7,11 @@ import { Footprints, Plus, Trash2 } from "lucide-react";
 
 interface DemoTinyStepsCardProps {
   onCookieEarned: (description: string) => void;
+  onStepToggle?: (stepId: string, completed: boolean) => void;
+  onStepsChange?: (count: number) => void;
 }
 
-const DemoTinyStepsCard = ({ onCookieEarned }: DemoTinyStepsCardProps) => {
+const DemoTinyStepsCard = ({ onCookieEarned, onStepToggle, onStepsChange }: DemoTinyStepsCardProps) => {
   const [steps, setSteps] = useState([
     { id: "1", text: "Drink a glass of water", completed: true },
     { id: "2", text: "Take 3 deep breaths", completed: false },
@@ -19,18 +21,24 @@ const DemoTinyStepsCard = ({ onCookieEarned }: DemoTinyStepsCardProps) => {
 
   const addStep = () => {
     if (newStep.trim()) {
-      setSteps(prev => [...prev, { id: Date.now().toString(), text: newStep.trim(), completed: false }]);
+      const newSteps = [...steps, { id: Date.now().toString(), text: newStep.trim(), completed: false }];
+      setSteps(newSteps);
       setNewStep("");
+      onStepsChange?.(newSteps.length);
     }
   };
 
   const toggleStep = (id: string) => {
     setSteps(prev => prev.map(step => {
-      if (step.id === id && !step.completed) {
-        onCookieEarned(`Completed: ${step.text}`);
-        return { ...step, completed: true };
+      if (step.id === id) {
+        const newCompleted = !step.completed;
+        if (newCompleted && !step.completed) {
+          onCookieEarned(`Completed: ${step.text}`);
+        }
+        onStepToggle?.(id, newCompleted);
+        return { ...step, completed: newCompleted };
       }
-      return step.id === id ? { ...step, completed: !step.completed } : step;
+      return step;
     }));
   };
 

@@ -7,9 +7,11 @@ import { Target, Plus, Trash2 } from "lucide-react";
 
 interface DemoHabitTrackerCardProps {
   onCookieEarned: (description: string) => void;
+  onHabitToggle?: (habitId: string, completed: boolean) => void;
+  onHabitsChange?: (count: number) => void;
 }
 
-const DemoHabitTrackerCard = ({ onCookieEarned }: DemoHabitTrackerCardProps) => {
+const DemoHabitTrackerCard = ({ onCookieEarned, onHabitToggle, onHabitsChange }: DemoHabitTrackerCardProps) => {
   const [habits, setHabits] = useState([
     { id: "1", name: "Morning meditation", completed: true },
     { id: "2", name: "Read for 15 mins", completed: false },
@@ -19,18 +21,24 @@ const DemoHabitTrackerCard = ({ onCookieEarned }: DemoHabitTrackerCardProps) => 
 
   const addHabit = () => {
     if (newHabit.trim()) {
-      setHabits(prev => [...prev, { id: Date.now().toString(), name: newHabit.trim(), completed: false }]);
+      const newHabits = [...habits, { id: Date.now().toString(), name: newHabit.trim(), completed: false }];
+      setHabits(newHabits);
       setNewHabit("");
+      onHabitsChange?.(newHabits.length);
     }
   };
 
   const toggleHabit = (id: string) => {
     setHabits(prev => prev.map(habit => {
-      if (habit.id === id && !habit.completed) {
-        onCookieEarned(`Habit: ${habit.name}`);
-        return { ...habit, completed: true };
+      if (habit.id === id) {
+        const newCompleted = !habit.completed;
+        if (newCompleted && !habit.completed) {
+          onCookieEarned(`Habit: ${habit.name}`);
+        }
+        onHabitToggle?.(id, newCompleted);
+        return { ...habit, completed: newCompleted };
       }
-      return habit.id === id ? { ...habit, completed: !habit.completed } : habit;
+      return habit;
     }));
   };
 
