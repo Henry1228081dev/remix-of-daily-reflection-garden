@@ -20,6 +20,7 @@ import CursorEffects from "@/components/demo/CursorEffects";
 import PerfectDayCelebration from "@/components/demo/PerfectDayCelebration";
 import AchievementBadges from "@/components/demo/AchievementBadges";
 import StreakProtection from "@/components/demo/StreakProtection";
+import LofiPlayer from "@/components/demo/LofiPlayer";
 import SafetyNote from "@/components/SafetyNote";
 import { useConfetti } from "@/hooks/useConfetti";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
@@ -452,6 +453,7 @@ const DemoDashboard = () => {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            <LofiPlayer />
             <Link to="/auth">
               <Button size="sm" className="rounded-full" onClick={playClick}>
                 Sign Up Free

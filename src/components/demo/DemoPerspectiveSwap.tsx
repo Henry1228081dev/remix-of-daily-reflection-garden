@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, Users, Scale, Heart, Sparkles } from "lucide-react";
+import { Eye, Users, Scale, Heart, Sparkles, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // Static example - no AI credits used
 const STATIC_EXAMPLE = {
@@ -14,16 +15,11 @@ const STATIC_EXAMPLE = {
   }
 };
 
-interface DemoPerspectiveSwapProps {
-  onShow?: () => void;
-}
-
-const DemoPerspectiveSwap = ({ onShow }: DemoPerspectiveSwapProps) => {
+const DemoPerspectiveSwap = () => {
   const [showPerspectives, setShowPerspectives] = useState(false);
 
   const handleShowPerspectives = () => {
     setShowPerspectives(true);
-    onShow?.();
   };
 
   if (!showPerspectives) {
@@ -36,11 +32,29 @@ const DemoPerspectiveSwap = ({ onShow }: DemoPerspectiveSwapProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            See how a situation looks from different angles. This can help you understand others better and find peace.
+          </p>
+          
+          {/* Demo notice */}
+          <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
+            <Lock className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-amber-700 dark:text-amber-400">
+              <span className="font-medium">Demo Mode:</span> This shows a sample scenario.{" "}
+              <Link to="/auth" className="underline hover:no-underline font-medium">
+                Sign in
+              </Link>{" "}
+              to write your own situations.
+            </div>
+          </div>
+
           <div className="p-4 rounded-lg bg-secondary/50 border border-border/50">
-            <p className="text-sm text-muted-foreground italic">
+            <p className="text-xs text-muted-foreground mb-1 font-medium">Example scenario:</p>
+            <p className="text-sm text-foreground italic">
               "{STATIC_EXAMPLE.situation}"
             </p>
           </div>
+          
           <div className="flex justify-center">
             <Button
               variant="wellness"
@@ -63,13 +77,22 @@ const DemoPerspectiveSwap = ({ onShow }: DemoPerspectiveSwapProps) => {
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            Perspective Swap Example
+            Perspective Swap
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground italic">
             "{STATIC_EXAMPLE.situation}"
           </p>
+          <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
+            <p className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+              <Lock className="w-3 h-3" />
+              <span>Demo example only.</span>
+              <Link to="/auth" className="underline hover:no-underline font-medium">
+                Sign in for custom prompts →
+              </Link>
+            </p>
+          </div>
         </CardContent>
       </Card>
 
