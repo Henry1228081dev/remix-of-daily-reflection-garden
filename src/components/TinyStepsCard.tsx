@@ -11,17 +11,39 @@ interface Step {
   completed: boolean;
 }
 
-const TinyStepsCard = () => {
+interface TinyStepsCardProps {
+  onCookieEarned?: (count: number) => void;
+}
+
+const COOKIE_STORAGE_KEY = "reflect-cookie-jar";
+
+const TinyStepsCard = ({ onCookieEarned }: TinyStepsCardProps) => {
   const [steps, setSteps] = useState<Step[]>([
     { id: "1", text: "Checked in on my mood", completed: false },
     { id: "2", text: "Wrote one sentence in my journal", completed: false },
   ]);
   const [newStep, setNewStep] = useState("");
 
+  const awardCookie = (stepText: string) => {
+    const savedCookies = localStorage.getItem(COOKIE_STORAGE_KEY);
+    const cookies: string[] = savedCookies ? JSON.parse(savedCookies) : [];
+    cookies.push(`Completed: ${stepText}`);
+    localStorage.setItem(COOKIE_STORAGE_KEY, JSON.stringify(cookies));
+    onCookieEarned?.(cookies.length);
+  };
+
   const toggleStep = (id: string) => {
-    setSteps(steps.map(step => 
-      step.id === id ? { ...step, completed: !step.completed } : step
-    ));
+    setSteps(steps.map(step => {
+      if (step.id === id) {
+        const newCompleted = !step.completed;
+        // Award cookie when completing (not uncompleting)
+        if (newCompleted) {
+          awardCookie(step.text);
+        }
+        return { ...step, completed: newCompleted };
+      }
+      return step;
+    }));
   };
 
   const addStep = () => {

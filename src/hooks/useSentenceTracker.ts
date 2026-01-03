@@ -7,17 +7,30 @@ interface UseSentenceTrackerProps {
   mood?: string | null;
 }
 
-// Count valid sentences (ends with . ! ? and has at least 4 words)
+// Count valid sentences - must have real words, proper length, and meaningful content
 const countValidSentences = (text: string): number => {
   if (!text.trim()) return 0;
   
   // Split by sentence-ending punctuation
   const sentences = text.split(/[.!?]+/).filter(s => s.trim());
   
-  // Count sentences with at least 4 words
+  // Count sentences with meaningful content
   return sentences.filter(sentence => {
-    const words = sentence.trim().split(/\s+/).filter(w => w.length > 0);
-    return words.length >= 4;
+    const trimmed = sentence.trim();
+    
+    // Filter out repeated characters (like "aaaa" or "....")
+    if (/^(.)\1{3,}$/.test(trimmed)) return false;
+    
+    // Filter out gibberish (mostly consonants with no vowels)
+    const hasVowels = /[aeiouAEIOU]/.test(trimmed);
+    if (!hasVowels && trimmed.length > 2) return false;
+    
+    // Must have at least 4 distinct words (not repeated)
+    const words = trimmed.split(/\s+/).filter(w => w.length > 1 && /[a-zA-Z]/.test(w));
+    const uniqueWords = new Set(words.map(w => w.toLowerCase()));
+    
+    // Need at least 4 unique words and at least 5 total words
+    return uniqueWords.size >= 4 && words.length >= 5;
   }).length;
 };
 
