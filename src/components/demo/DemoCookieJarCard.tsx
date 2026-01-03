@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cookie } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Cookie, ShoppingBag, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CookieItem {
@@ -11,28 +12,73 @@ interface CookieItem {
 
 interface DemoCookieJarCardProps {
   cookies: CookieItem[];
+  totalBalance?: number;
+  onOpenShop?: () => void;
+  ownedItemsCount?: number;
+  equippedAvatar?: string | null;
 }
 
-const DemoCookieJarCard = ({ cookies }: DemoCookieJarCardProps) => {
+// Map avatar IDs to emojis
+const avatarEmojis: Record<string, string> = {
+  "avatar-zen": "🧘",
+  "avatar-nature": "🌿",
+  "avatar-cosmic": "🚀",
+  "avatar-phoenix": "🔥",
+  "avatar-crystal": "💎",
+};
+
+const DemoCookieJarCard = ({ 
+  cookies, 
+  totalBalance,
+  onOpenShop,
+  ownedItemsCount = 0,
+  equippedAvatar
+}: DemoCookieJarCardProps) => {
+  const displayBalance = totalBalance ?? cookies.length;
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="relative overflow-hidden">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5" />
+      
+      <CardHeader className="pb-3 relative">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Cookie className="w-5 h-5 text-primary" />
+            <Cookie className="w-5 h-5 text-amber-500" />
             Cookie Jar
           </CardTitle>
-          <span className="text-2xl font-bold text-primary">{cookies.length}</span>
+          <motion.div 
+            className="flex items-center gap-2"
+            key={displayBalance}
+            initial={{ scale: 1.2 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <span className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+              {displayBalance}
+            </span>
+            <span className="text-2xl">🍪</span>
+          </motion.div>
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
+      
+      <CardContent className="relative space-y-4">
+        {/* Equipped Avatar Display */}
+        {equippedAvatar && (
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <span className="text-2xl">{avatarEmojis[equippedAvatar] || "🧘"}</span>
+            <span className="text-sm font-medium text-primary">Avatar Equipped!</span>
+          </div>
+        )}
+
+        <p className="text-sm text-muted-foreground">
           Your collection of wins and achievements! 🎉
         </p>
         
-        <div className="space-y-2 max-h-48 overflow-y-auto">
+        {/* Recent cookies */}
+        <div className="space-y-2 max-h-32 overflow-y-auto">
           <AnimatePresence>
-            {cookies.slice().reverse().map((cookie, index) => (
+            {cookies.slice().reverse().slice(0, 5).map((cookie, index) => (
               <motion.div
                 key={cookie.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -50,6 +96,31 @@ const DemoCookieJarCard = ({ cookies }: DemoCookieJarCardProps) => {
             ))}
           </AnimatePresence>
         </div>
+
+        {/* Shop Button */}
+        {onOpenShop && (
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Button 
+              onClick={onOpenShop}
+              className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white font-bold shadow-lg"
+              size="lg"
+            >
+              <ShoppingBag className="w-5 h-5 mr-2" />
+              Open Cookie Shop
+              <Sparkles className="w-4 h-4 ml-2" />
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Owned items indicator */}
+        {ownedItemsCount > 0 && (
+          <p className="text-xs text-center text-muted-foreground">
+            ✨ You own {ownedItemsCount} item{ownedItemsCount !== 1 ? "s" : ""}!
+          </p>
+        )}
 
         {cookies.length === 0 && (
           <div className="text-center py-6 text-muted-foreground">
