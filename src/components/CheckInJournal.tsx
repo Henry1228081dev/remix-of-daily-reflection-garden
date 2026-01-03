@@ -26,9 +26,10 @@ const prompts = [
 
 interface CheckInJournalProps {
   selectedMood?: string | null;
+  onSave?: () => void;
 }
 
-const CheckInJournal = ({ selectedMood }: CheckInJournalProps) => {
+const CheckInJournal = ({ selectedMood, onSave }: CheckInJournalProps) => {
   const today = new Date().toDateString();
   
   const [entries, setEntries] = useState<JournalEntry[]>(() => {
@@ -66,6 +67,7 @@ const CheckInJournal = ({ selectedMood }: CheckInJournalProps) => {
       
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+      onSave?.();
     }
   };
 
