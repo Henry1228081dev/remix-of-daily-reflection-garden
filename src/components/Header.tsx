@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import LofiPlayer from "@/components/demo/LofiPlayer";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -42,15 +43,18 @@ const Header = () => {
         </p>
         
         {user && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSignOut}
-            className="absolute right-0 top-0 text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Log out
-          </Button>
+          <div className="absolute right-0 top-0 flex items-center gap-3">
+            <LofiPlayer />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Log out
+            </Button>
+          </div>
         )}
       </div>
     </header>
