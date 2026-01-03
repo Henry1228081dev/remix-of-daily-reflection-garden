@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ReflectionPrompts from "@/components/ReflectionPrompts";
@@ -14,6 +14,9 @@ import EnhancedCheckInJournal from "@/components/EnhancedCheckInJournal";
 import WeeklyReflectionSummary from "@/components/WeeklyReflectionSummary";
 import PerspectiveSwapButton from "@/components/PerspectiveSwapButton";
 import SafetyNote from "@/components/SafetyNote";
+import MoodNotificationSettings from "@/components/MoodNotificationSettings";
+import { useMoodNotifications } from "@/hooks/useMoodNotifications";
+import { useMoodEntries } from "@/hooks/useMoodEntries";
 
 const Index = () => {
   const [showReflection, setShowReflection] = useState(false);
@@ -21,6 +24,10 @@ const Index = () => {
   const [journalKey, setJournalKey] = useState(0);
   const [cookieCount, setCookieCount] = useState(0);
   const cookieJarRef = useRef<CookieJarCardRef>(null);
+
+  // Initialize mood notifications
+  const { upsertMood } = useMoodEntries();
+  useMoodNotifications((mood) => upsertMood.mutate(mood));
 
   const handleJournalSave = () => {
     setJournalKey(prev => prev + 1);
@@ -77,6 +84,7 @@ const Index = () => {
               cookieJarRef.current?.refresh();
             }} />
             <CookieJarCard ref={cookieJarRef} externalCount={cookieCount} />
+            <MoodNotificationSettings />
             <KindNotesCard />
           </div>
         </div>

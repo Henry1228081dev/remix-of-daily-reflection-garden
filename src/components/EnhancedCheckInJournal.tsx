@@ -2,11 +2,13 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Check, Cookie, Sparkles } from "lucide-react";
+import { BookOpen, Check, Cookie, Sparkles, AlertTriangle } from "lucide-react";
 import KindNoteNotification from "./KindNoteNotification";
 import { supabase } from "@/integrations/supabase/client";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useCookies } from "@/hooks/useCookies";
+import { validateJournalEntry } from "@/lib/journalValidation";
+import { useToast } from "@/hooks/use-toast";
 
 const prompts = [
   "What's one thing you're grateful for today?",
@@ -54,6 +56,7 @@ const countValidSentences = (text: string): number => {
 
 const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: EnhancedCheckInJournalProps) => {
   const today = new Date().toISOString().split("T")[0];
+  const { toast } = useToast();
   
   const { getTodayEntry, upsertEntry } = useJournalEntries();
   const { addCookie, totalCount } = useCookies();
@@ -66,6 +69,8 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
   const [saved, setSaved] = useState(false);
   const [kindNote, setKindNote] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [savedAsInvalid, setSavedAsInvalid] = useState(false);
+  const [invalidReasons, setInvalidReasons] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Track sentence counts: baseline is what was already saved, current is live count
@@ -148,23 +153,56 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
 
   const saveEntry = () => {
     if (entry.trim()) {
-      const totalCookies = (todayEntry?.cookies_earned ?? 0) + sessionCookiesEarned;
+      const validation = validateJournalEntry(entry);
       
-      upsertEntry.mutate({
-        date: today,
-        entry: entry.trim(),
-        prompt: currentPrompt,
-        mood: selectedMood || undefined,
-        cookies_earned: totalCookies,
-      });
-      
-      // Update baseline after save so further edits don't double-count
-      baselineSentenceCount.current = countValidSentences(entry.trim());
-      setSessionCookiesEarned(0);
-      
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      onSave?.();
+      if (validation.isValid) {
+        const totalCookies = (todayEntry?.cookies_earned ?? 0) + sessionCookiesEarned;
+        
+        upsertEntry.mutate({
+          date: today,
+          entry: entry.trim(),
+          prompt: currentPrompt,
+          mood: selectedMood || undefined,
+          cookies_earned: totalCookies,
+        });
+        
+        // Update baseline after save so further edits don't double-count
+        baselineSentenceCount.current = countValidSentences(entry.trim());
+        setSessionCookiesEarned(0);
+        setSavedAsInvalid(false);
+        setInvalidReasons([]);
+        
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+        onSave?.();
+        
+        toast({
+          title: "Entry saved! 🌟",
+          description: sessionCookiesEarned > 0 
+            ? `You earned ${sessionCookiesEarned} cookie${sessionCookiesEarned > 1 ? 's' : ''} for journaling!`
+            : "Your reflection has been saved.",
+        });
+      } else {
+        // Save but mark as invalid, don't award cookies
+        upsertEntry.mutate({
+          date: today,
+          entry: entry.trim(),
+          prompt: currentPrompt,
+          mood: selectedMood || undefined,
+          cookies_earned: todayEntry?.cookies_earned ?? 0, // Don't add new cookies
+        });
+        
+        setSavedAsInvalid(true);
+        setInvalidReasons(validation.reasons);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+        
+        toast({
+          title: "Entry saved, but marked invalid ⚠️",
+          description: "No cookies earned. Try writing something more meaningful!",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -235,6 +273,23 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
             )}
           </div>
 
+          {/* Validation warning */}
+          {savedAsInvalid && invalidReasons.length > 0 && (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 animate-fade-in">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-destructive">Invalid Entry</p>
+                  <ul className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                    {invalidReasons.map((reason, i) => (
+                      <li key={i}>• {reason}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2 justify-end">
             <Button 
               variant="wellness" 
@@ -243,10 +298,17 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
               disabled={!entry.trim() || upsertEntry.isPending}
             >
               {saved ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Saved!
-                </>
+                savedAsInvalid ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4" />
+                    Saved (Invalid)
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Saved!
+                  </>
+                )
               ) : upsertEntry.isPending ? (
                 "Saving..."
               ) : (
