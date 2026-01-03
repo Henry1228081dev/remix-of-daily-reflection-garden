@@ -13,6 +13,8 @@ import { toast } from "@/hooks/use-toast";
 interface UserProfile {
   intent: string[];
   habitToBuild: string;
+  dailyHabits: string[];
+  tinySteps: string[];
   stepPreference: string;
   obstacles: string[];
   reflectionStyle: string;
@@ -51,19 +53,34 @@ const REFLECTION_STYLE_OPTIONS = [
   "Not sure",
 ];
 
+const DAILY_HABIT_SUGGESTIONS = [
+  "🧘 Morning meditation",
+  "📖 Read for 15 minutes",
+  "💧 Drink 8 glasses of water",
+  "🚶 Take a 10-minute walk",
+  "📓 Write in journal",
+  "🍎 Eat a healthy breakfast",
+  "😴 Go to bed by 10pm",
+  "🧹 Tidy space for 5 minutes",
+];
+
 const OnboardingSurvey = () => {
   const navigate = useNavigate();
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [newHabit, setNewHabit] = useState("");
+  const [newStep, setNewStep] = useState("");
   const [answers, setAnswers] = useState<Partial<UserProfile>>({
     intent: [],
     habitToBuild: "",
+    dailyHabits: [],
+    tinySteps: [],
     stepPreference: "",
     obstacles: [],
     reflectionStyle: "",
     consentGiven: false,
   });
 
-  const totalQuestions = 6;
+  const totalQuestions = 8;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
 
   const canProceed = (): boolean => {
@@ -73,12 +90,16 @@ const OnboardingSurvey = () => {
       case 1:
         return (answers.habitToBuild?.length || 0) >= 5 && (answers.habitToBuild?.length || 0) <= 100;
       case 2:
-        return !!answers.stepPreference;
+        return (answers.dailyHabits?.length || 0) >= 1;
       case 3:
-        return (answers.obstacles?.length || 0) > 0 && (answers.obstacles?.length || 0) <= 2;
+        return (answers.tinySteps?.length || 0) >= 1;
       case 4:
-        return !!answers.reflectionStyle;
+        return !!answers.stepPreference;
       case 5:
+        return (answers.obstacles?.length || 0) > 0 && (answers.obstacles?.length || 0) <= 2;
+      case 6:
+        return !!answers.reflectionStyle;
+      case 7:
         return answers.consentGiven === true;
       default:
         return false;
@@ -103,6 +124,8 @@ const OnboardingSurvey = () => {
     const profile: UserProfile = {
       intent: answers.intent || [],
       habitToBuild: answers.habitToBuild || "",
+      dailyHabits: answers.dailyHabits || [],
+      tinySteps: answers.tinySteps || [],
       stepPreference: answers.stepPreference || "",
       obstacles: answers.obstacles || [],
       reflectionStyle: answers.reflectionStyle || "",
@@ -119,6 +142,40 @@ const OnboardingSurvey = () => {
     });
 
     navigate("/");
+  };
+
+  const addCustomHabit = () => {
+    if (newHabit.trim() && !answers.dailyHabits?.includes(newHabit.trim())) {
+      setAnswers(prev => ({
+        ...prev,
+        dailyHabits: [...(prev.dailyHabits || []), newHabit.trim()]
+      }));
+      setNewHabit("");
+    }
+  };
+
+  const removeHabit = (habit: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      dailyHabits: (prev.dailyHabits || []).filter(h => h !== habit)
+    }));
+  };
+
+  const addCustomStep = () => {
+    if (newStep.trim() && !answers.tinySteps?.includes(newStep.trim())) {
+      setAnswers(prev => ({
+        ...prev,
+        tinySteps: [...(prev.tinySteps || []), newStep.trim()]
+      }));
+      setNewStep("");
+    }
+  };
+
+  const removeStep = (step: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      tinySteps: (prev.tinySteps || []).filter(s => s !== step)
+    }));
   };
 
   const toggleArrayItem = (key: "intent" | "obstacles", item: string, maxItems?: number) => {
@@ -188,6 +245,125 @@ const OnboardingSurvey = () => {
       case 2:
         return (
           <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground">What daily habits do you want to build?</h2>
+            <p className="text-muted-foreground">Pick from suggestions or add your own — we'll track these for you</p>
+            
+            {/* Selected habits */}
+            {(answers.dailyHabits?.length || 0) > 0 && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {answers.dailyHabits?.map((habit) => (
+                  <motion.span
+                    key={habit}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="inline-flex items-center gap-2 bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm font-medium"
+                  >
+                    {habit}
+                    <button
+                      onClick={() => removeHabit(habit)}
+                      className="hover:bg-primary/30 rounded-full p-0.5"
+                    >
+                      ✕
+                    </button>
+                  </motion.span>
+                ))}
+              </div>
+            )}
+
+            {/* Suggestions */}
+            <div className="space-y-2 pt-2">
+              <p className="text-sm font-medium text-muted-foreground">Suggestions:</p>
+              <div className="flex flex-wrap gap-2">
+                {DAILY_HABIT_SUGGESTIONS.filter(h => !answers.dailyHabits?.includes(h)).map((habit) => (
+                  <motion.button
+                    key={habit}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setAnswers(prev => ({
+                      ...prev,
+                      dailyHabits: [...(prev.dailyHabits || []), habit]
+                    }))}
+                    className="px-3 py-1.5 rounded-full border border-border hover:border-primary/50 hover:bg-primary/10 text-sm transition-all"
+                  >
+                    {habit}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom input */}
+            <div className="flex gap-2 pt-2">
+              <Input
+                placeholder="Add your own habit..."
+                value={newHabit}
+                onChange={(e) => setNewHabit(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addCustomHabit()}
+                className="flex-1"
+              />
+              <Button onClick={addCustomHabit} variant="outline" disabled={!newHabit.trim()}>
+                Add
+              </Button>
+            </div>
+            
+            <p className="text-sm text-muted-foreground">
+              {answers.dailyHabits?.length || 0} habit{(answers.dailyHabits?.length || 0) !== 1 ? 's' : ''} selected
+            </p>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground">What tiny steps do you want to take today?</h2>
+            <p className="text-muted-foreground">Break your goals into small, achievable actions for today</p>
+            
+            {/* Selected steps */}
+            {(answers.tinySteps?.length || 0) > 0 && (
+              <div className="space-y-2 pt-2">
+                {answers.tinySteps?.map((step, index) => (
+                  <motion.div
+                    key={step}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className="flex items-center gap-3 bg-secondary/50 p-3 rounded-lg"
+                  >
+                    <span className="w-6 h-6 bg-primary/20 text-primary rounded-full flex items-center justify-center text-sm font-bold">
+                      {index + 1}
+                    </span>
+                    <span className="flex-1 text-foreground">{step}</span>
+                    <button
+                      onClick={() => removeStep(step)}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      ✕
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* Add step input */}
+            <div className="flex gap-2 pt-2">
+              <Input
+                placeholder="e.g., Drink a glass of water, Take a 5-minute walk..."
+                value={newStep}
+                onChange={(e) => setNewStep(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addCustomStep()}
+                className="flex-1"
+              />
+              <Button onClick={addCustomStep} variant="outline" disabled={!newStep.trim()}>
+                Add
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground italic">
+              💡 Tip: Keep steps small enough to complete in 5-15 minutes
+            </p>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">How do you prefer to break down goals?</h2>
             <p className="text-muted-foreground">Understanding your style helps us support you better</p>
             <RadioGroup
@@ -214,7 +390,7 @@ const OnboardingSurvey = () => {
           </div>
         );
 
-      case 3:
+      case 5:
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">What usually stops you from following through?</h2>
@@ -247,7 +423,7 @@ const OnboardingSurvey = () => {
           </div>
         );
 
-      case 4:
+      case 6:
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">How do you usually reflect on your day?</h2>
@@ -276,7 +452,7 @@ const OnboardingSurvey = () => {
           </div>
         );
 
-      case 5:
+      case 7:
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold text-foreground">Almost there! 🌱</h2>

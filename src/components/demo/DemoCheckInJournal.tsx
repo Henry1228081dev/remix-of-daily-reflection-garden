@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { PenLine, Sparkles } from "lucide-react";
+import { PenLine, Sparkles, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DemoCheckInJournalProps {
@@ -18,35 +18,135 @@ const prompts = [
   "What would make today great?",
 ];
 
+interface ValidationResult {
+  isValid: boolean;
+  reasons: string[];
+}
+
+// Validate journal entry for spam/gibberish
+const validateEntry = (text: string): ValidationResult => {
+  const trimmed = text.trim();
+  const reasons: string[] = [];
+  
+  if (!trimmed) {
+    return { isValid: false, reasons: ["Entry is empty"] };
+  }
+
+  // Check for repeated single characters (like "sssss" or ".......")
+  if (/^(.)\1{4,}$/i.test(trimmed)) {
+    reasons.push("Entry contains only repeated characters");
+  }
+
+  // Check for patterns like "S.S.S." or "a.b.c.d"
+  if (/^([a-z]\.){2,}[a-z]?\.?$/i.test(trimmed.replace(/\s/g, ''))) {
+    reasons.push("Entry appears to be random letters with periods");
+  }
+
+  // Check for mostly non-letter characters
+  const letterCount = (trimmed.match(/[a-zA-Z]/g) || []).length;
+  const totalChars = trimmed.replace(/\s/g, '').length;
+  if (totalChars > 3 && letterCount / totalChars < 0.3) {
+    reasons.push("Entry contains too few actual letters");
+  }
+
+  // Check for very short entries with no real words
+  const words = trimmed.split(/\s+/).filter(w => w.length > 2 && /[a-zA-Z]{2,}/.test(w));
+  if (trimmed.length > 5 && words.length < 2) {
+    reasons.push("Entry doesn't contain meaningful words");
+  }
+
+  // Check for keyboard smashing (random consonant clusters)
+  if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(trimmed)) {
+    reasons.push("Entry appears to be keyboard smashing");
+  }
+
+  // Check for repeating patterns like "abcabc" or "123123"
+  if (/^(.{1,4})\1{2,}$/i.test(trimmed.replace(/\s/g, ''))) {
+    reasons.push("Entry contains repetitive patterns");
+  }
+
+  return {
+    isValid: reasons.length === 0,
+    reasons
+  };
+};
+
 const DemoCheckInJournal = ({ selectedMood, onCookieEarned }: DemoCheckInJournalProps) => {
   const [entry, setEntry] = useState("");
   const [currentPrompt] = useState(prompts[Math.floor(Math.random() * prompts.length)]);
   const [saved, setSaved] = useState(false);
+  const [savedAsInvalid, setSavedAsInvalid] = useState(false);
+  const [invalidReasons, setInvalidReasons] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleSave = () => {
     if (entry.trim()) {
-      setSaved(true);
-      onCookieEarned(`Journal entry (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
-      toast({
-        title: "Reflection saved! 🌟",
-        description: "You earned a cookie for journaling today!",
-      });
+      const validation = validateEntry(entry);
+      
+      if (validation.isValid) {
+        setSaved(true);
+        setSavedAsInvalid(false);
+        onCookieEarned(`Journal entry (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
+        toast({
+          title: "Reflection saved! 🌟",
+          description: "You earned a cookie for journaling today!",
+        });
+      } else {
+        // Save but mark as invalid, no cookie
+        setSaved(true);
+        setSavedAsInvalid(true);
+        setInvalidReasons(validation.reasons);
+        toast({
+          title: "Entry saved, but marked invalid ⚠️",
+          description: "No cookie earned. Try writing something more meaningful!",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   if (saved) {
     return (
-      <Card className="border-primary/20">
+      <Card className={`border-2 ${savedAsInvalid ? 'border-destructive/50' : 'border-primary/20'}`}>
         <CardContent className="py-8 text-center">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8 text-primary" />
+          <div className={`w-16 h-16 ${savedAsInvalid ? 'bg-destructive/10' : 'bg-primary/10'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+            {savedAsInvalid ? (
+              <AlertTriangle className="w-8 h-8 text-destructive" />
+            ) : (
+              <Sparkles className="w-8 h-8 text-primary" />
+            )}
           </div>
-          <h3 className="text-xl font-medium mb-2">Beautiful reflection!</h3>
-          <p className="text-muted-foreground mb-4">
-            You've completed your check-in for today.
-          </p>
-          <Button variant="outline" onClick={() => { setSaved(false); setEntry(""); }}>
+          
+          {savedAsInvalid ? (
+            <>
+              <h3 className="text-xl font-medium mb-2 text-destructive">Invalid Entry Saved</h3>
+              <div className="bg-destructive/10 rounded-lg p-4 mb-4 text-left">
+                <p className="text-sm font-medium text-destructive mb-2">Reasons:</p>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  {invalidReasons.map((reason, i) => (
+                    <li key={i}>• {reason}</li>
+                  ))}
+                </ul>
+              </div>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Your entry was saved but you didn't earn a cookie. Try writing a genuine reflection!
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-medium mb-2">Beautiful reflection!</h3>
+              <p className="text-muted-foreground mb-4">
+                You've completed your check-in for today.
+              </p>
+            </>
+          )}
+          
+          <Button variant="outline" onClick={() => { 
+            setSaved(false); 
+            setSavedAsInvalid(false);
+            setInvalidReasons([]);
+            setEntry(""); 
+          }}>
             Write another entry
           </Button>
         </CardContent>

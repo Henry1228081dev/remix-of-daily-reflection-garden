@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Crown, Palette, Award, Zap } from "lucide-react";
+import { X, Sparkles, Crown, Palette, Award, Zap, MousePointer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ShopItemCard, { ShopItem } from "./ShopItemCard";
 
@@ -12,7 +12,8 @@ interface DemoCookieShopProps {
   ownedItems: string[];
   equippedAvatar: string | null;
   equippedTheme: string | null;
-  onEquip: (itemId: string, type: "avatar" | "theme") => void;
+  equippedCursor: string | null;
+  onEquip: (itemId: string, type: "avatar" | "theme" | "cursor") => void;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
@@ -42,11 +43,21 @@ const SHOP_ITEMS: ShopItem[] = [
   { id: "effect-confetti", name: "Party Confetti", price: 10, category: "effect", rarity: "rare", emoji: "🎊", description: "Extra confetti on celebrations", gradient: "from-sticky-pink to-sticky-yellow" },
   { id: "effect-rainbow", name: "Rainbow Pop", price: 12, category: "effect", rarity: "rare", emoji: "🌈", description: "Rainbow effects on actions", gradient: "from-terracotta via-sticky-yellow to-primary" },
   { id: "effect-fireworks", name: "Fireworks Show", price: 20, category: "effect", rarity: "epic", emoji: "🎆", description: "Epic fireworks celebrations", gradient: "from-lavender to-sticky-pink" },
+  
+  // Cursors
+  { id: "cursor-wand", name: "Magic Wand", price: 10, category: "cursor", rarity: "common", emoji: "🪄", description: "Wave your magic cursor", gradient: "from-lavender to-primary" },
+  { id: "cursor-star", name: "Star Trail", price: 15, category: "cursor", rarity: "rare", emoji: "⭐", description: "Leave a trail of stars behind your cursor", gradient: "from-sticky-yellow to-terracotta" },
+  { id: "cursor-heart", name: "Heart Pointer", price: 18, category: "cursor", rarity: "rare", emoji: "💖", description: "Spread love with every click", gradient: "from-sticky-pink to-terracotta" },
+  { id: "cursor-pet-cat", name: "Cursor Pet: Cat", price: 25, category: "cursor", rarity: "epic", emoji: "🐱", description: "A cute cat follows your cursor around", gradient: "from-terracotta to-accent" },
+  { id: "cursor-pet-dog", name: "Cursor Pet: Dog", price: 25, category: "cursor", rarity: "epic", emoji: "🐕", description: "A loyal pup that chases your cursor", gradient: "from-sage to-mint" },
+  { id: "cursor-halo", name: "Golden Halo", price: 30, category: "cursor", rarity: "epic", emoji: "😇", description: "A glowing halo surrounds your cursor", gradient: "from-sticky-yellow to-cream-warm" },
+  { id: "cursor-galaxy", name: "Galaxy Cursor", price: 40, category: "cursor", rarity: "legendary", emoji: "🌌", description: "The cosmos follows your every move", gradient: "from-lavender via-sticky-blue to-primary" },
 ];
 
 const categories = [
   { id: "avatar", label: "Avatars", icon: Crown },
   { id: "theme", label: "Themes", icon: Palette },
+  { id: "cursor", label: "Cursors", icon: MousePointer },
   { id: "badge", label: "Badges", icon: Award },
   { id: "effect", label: "Effects", icon: Zap },
 ];
@@ -59,6 +70,7 @@ const DemoCookieShop = ({
   ownedItems,
   equippedAvatar,
   equippedTheme,
+  equippedCursor,
   onEquip
 }: DemoCookieShopProps) => {
   const [activeCategory, setActiveCategory] = useState("avatar");
@@ -178,10 +190,10 @@ const DemoCookieShop = ({
                     key={item.id}
                     item={item}
                     isOwned={ownedItems.includes(item.id)}
-                    isEquipped={equippedAvatar === item.id || equippedTheme === item.id}
+                    isEquipped={equippedAvatar === item.id || equippedTheme === item.id || equippedCursor === item.id}
                     canAfford={cookieBalance >= item.price}
                     onPurchase={() => onPurchase(item)}
-                    onEquip={() => onEquip(item.id, item.category as "avatar" | "theme")}
+                    onEquip={() => onEquip(item.id, item.category as "avatar" | "theme" | "cursor")}
                   />
                 ))}
               </div>

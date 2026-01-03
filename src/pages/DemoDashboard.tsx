@@ -16,6 +16,7 @@ import DemoMoodChart from "@/components/demo/DemoMoodChart";
 import DemoCheckInJournal from "@/components/demo/DemoCheckInJournal";
 import DemoWeeklyReflection from "@/components/demo/DemoWeeklyReflection";
 import DemoCookieShop from "@/components/demo/DemoCookieShop";
+import CursorEffects from "@/components/demo/CursorEffects";
 import PerspectiveSwapButton from "@/components/PerspectiveSwapButton";
 import SafetyNote from "@/components/SafetyNote";
 import { useConfetti } from "@/hooks/useConfetti";
@@ -68,6 +69,7 @@ const DemoDashboard = () => {
   const [ownedItems, setOwnedItems] = useState<string[]>([]);
   const [equippedAvatar, setEquippedAvatar] = useState<string | null>(null);
   const [equippedTheme, setEquippedTheme] = useState<string | null>(null);
+  const [equippedCursor, setEquippedCursor] = useState<string | null>(null);
   const [spentCookies, setSpentCookies] = useState(0);
 
   const availableBalance = cookieBalance - spentCookies;
@@ -103,23 +105,29 @@ const DemoDashboard = () => {
       celebratePurchase();
       toast.success(`🎁 Purchased ${item.name}!`);
       
-      // Auto-equip if it's the first avatar/theme
+      // Auto-equip if it's the first avatar/theme/cursor
       if (item.category === "avatar" && !equippedAvatar) {
         setEquippedAvatar(item.id);
       }
       if (item.category === "theme" && !equippedTheme) {
         setEquippedTheme(item.id);
       }
+      if (item.category === "cursor" && !equippedCursor) {
+        setEquippedCursor(item.id);
+      }
     }
   };
 
-  const handleEquip = (itemId: string, type: "avatar" | "theme") => {
+  const handleEquip = (itemId: string, type: "avatar" | "theme" | "cursor") => {
     if (type === "avatar") {
       setEquippedAvatar(itemId);
       toast.success("Avatar equipped!");
-    } else {
+    } else if (type === "theme") {
       setEquippedTheme(itemId);
       toast.success("Theme applied! 🎨");
+    } else {
+      setEquippedCursor(itemId);
+      toast.success("Cursor equipped! 🖱️");
     }
   };
 
@@ -252,8 +260,12 @@ const DemoDashboard = () => {
         ownedItems={ownedItems}
         equippedAvatar={equippedAvatar}
         equippedTheme={equippedTheme}
+        equippedCursor={equippedCursor}
         onEquip={handleEquip}
       />
+
+      {/* Cursor Effects */}
+      <CursorEffects equippedCursor={equippedCursor} />
     </div>
   );
 };
