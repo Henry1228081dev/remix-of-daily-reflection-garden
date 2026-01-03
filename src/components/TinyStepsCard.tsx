@@ -4,64 +4,49 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ListTodo, Plus, X } from "lucide-react";
-
-interface Step {
-  id: string;
-  text: string;
-  completed: boolean;
-}
+import { useTinySteps } from "@/hooks/useTinySteps";
+import { useCookies } from "@/hooks/useCookies";
 
 interface TinyStepsCardProps {
   onCookieEarned?: (count: number) => void;
 }
 
-const COOKIE_STORAGE_KEY = "reflect-cookie-jar";
-
 const TinyStepsCard = ({ onCookieEarned }: TinyStepsCardProps) => {
-  const [steps, setSteps] = useState<Step[]>([
-    { id: "1", text: "Checked in on my mood", completed: false },
-    { id: "2", text: "Wrote one sentence in my journal", completed: false },
-  ]);
+  const { steps, isLoading, addStep, toggleStep, deleteStep, completedCount } = useTinySteps();
+  const { addCookie, totalCount } = useCookies();
   const [newStep, setNewStep] = useState("");
 
-  const awardCookie = (stepText: string) => {
-    const savedCookies = localStorage.getItem(COOKIE_STORAGE_KEY);
-    const cookies: string[] = savedCookies ? JSON.parse(savedCookies) : [];
-    cookies.push(`Completed: ${stepText}`);
-    localStorage.setItem(COOKIE_STORAGE_KEY, JSON.stringify(cookies));
-    onCookieEarned?.(cookies.length);
+  const handleToggleStep = async (id: string, currentCompleted: boolean, stepText: string) => {
+    const newCompleted = !currentCompleted;
+    
+    // Award cookie when completing (not uncompleting)
+    if (newCompleted) {
+      addCookie.mutate({ 
+        description: `Completed: ${stepText}`, 
+        source: "step" 
+      });
+      onCookieEarned?.(totalCount + 1);
+    }
+    
+    toggleStep.mutate({ id, completed: newCompleted });
   };
 
-  const toggleStep = (id: string) => {
-    setSteps(steps.map(step => {
-      if (step.id === id) {
-        const newCompleted = !step.completed;
-        // Award cookie when completing (not uncompleting)
-        if (newCompleted) {
-          awardCookie(step.text);
-        }
-        return { ...step, completed: newCompleted };
-      }
-      return step;
-    }));
-  };
-
-  const addStep = () => {
+  const handleAddStep = () => {
     if (newStep.trim()) {
-      setSteps([...steps, { 
-        id: Date.now().toString(), 
-        text: newStep.trim(), 
-        completed: false 
-      }]);
+      addStep.mutate(newStep.trim());
       setNewStep("");
     }
   };
 
-  const removeStep = (id: string) => {
-    setSteps(steps.filter(step => step.id !== id));
-  };
-
-  const completedCount = steps.filter(s => s.completed).length;
+  if (isLoading) {
+    return (
+      <Card className="bg-card shadow-card border-0 animate-fade-in-up stagger-3">
+        <CardContent className="p-6 text-center text-muted-foreground">
+          Loading steps...
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card shadow-card border-0 animate-fade-in-up stagger-3">
@@ -72,47 +57,53 @@ const TinyStepsCard = ({ onCookieEarned }: TinyStepsCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {steps.map((step) => (
-          <div 
-            key={step.id} 
-            className="flex items-center gap-3 group"
-          >
-            <Checkbox 
-              id={step.id}
-              checked={step.completed}
-              onCheckedChange={() => toggleStep(step.id)}
-              className="border-primary data-[state=checked]:bg-primary"
-            />
-            <label 
-              htmlFor={step.id}
-              className={`flex-1 text-sm cursor-pointer transition-all ${
-                step.completed ? 'text-muted-foreground line-through' : 'text-foreground'
-              }`}
+        {steps.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-2">
+            Add your first tiny step for today 🌱
+          </p>
+        ) : (
+          steps.map((step) => (
+            <div 
+              key={step.id} 
+              className="flex items-center gap-3 group"
             >
-              {step.text}
-            </label>
-            <button 
-              onClick={() => removeStep(step.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
+              <Checkbox 
+                id={step.id}
+                checked={step.completed}
+                onCheckedChange={() => handleToggleStep(step.id, step.completed, step.text)}
+                className="border-primary data-[state=checked]:bg-primary"
+              />
+              <label 
+                htmlFor={step.id}
+                className={`flex-1 text-sm cursor-pointer transition-all ${
+                  step.completed ? 'text-muted-foreground line-through' : 'text-foreground'
+                }`}
+              >
+                {step.text}
+              </label>
+              <button 
+                onClick={() => deleteStep.mutate(step.id)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))
+        )}
 
         <div className="flex gap-2 pt-2">
           <Input
             placeholder="Add a tiny step..."
             value={newStep}
             onChange={(e) => setNewStep(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addStep()}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddStep()}
             className="bg-secondary/50 border-sage-light/30 text-sm"
           />
           <Button 
             variant="gentle" 
             size="icon"
-            onClick={addStep}
-            disabled={!newStep.trim()}
+            onClick={handleAddStep}
+            disabled={!newStep.trim() || addStep.isPending}
           >
             <Plus className="w-4 h-4" />
           </Button>

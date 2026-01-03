@@ -1,17 +1,7 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Calendar } from "lucide-react";
-import { format, parseISO } from "date-fns";
-
-const STORAGE_KEY = "reflect-journal-entries";
-
-interface JournalEntry {
-  date: string;
-  timestamp?: string;
-  entry: string;
-  prompt?: string;
-  mood?: string;
-}
+import { format } from "date-fns";
+import { useJournalEntries } from "@/hooks/useJournalEntries";
 
 const moodEmojis: Record<string, string> = {
   great: "😀",
@@ -24,19 +14,7 @@ const moodEmojis: Record<string, string> = {
 };
 
 const PastJournalsCard = () => {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved) as JournalEntry[];
-      // Sort by date, most recent first
-      const sorted = parsed.sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-      setEntries(sorted);
-    }
-  }, []);
+  const { entries, isLoading } = useJournalEntries();
 
   const formatDate = (dateString: string, timestamp?: string) => {
     try {
@@ -50,6 +28,16 @@ const PastJournalsCard = () => {
       return dateString;
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-card shadow-card border-0 animate-fade-in-up stagger-5">
+        <CardContent className="p-6 text-center text-muted-foreground">
+          Loading journal entries...
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card shadow-card border-0 animate-fade-in-up stagger-5">
@@ -73,13 +61,13 @@ const PastJournalsCard = () => {
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
             {entries.slice(0, 5).map((entry, index) => (
               <div 
-                key={entry.date} 
+                key={entry.id} 
                 className="bg-secondary/50 rounded-lg p-3 animate-fade-in"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="flex items-center gap-2 text-sm text-sage-dark mb-2">
                   <Calendar className="w-4 h-4" />
-                  <span className="font-medium">{formatDate(entry.date, entry.timestamp)}</span>
+                  <span className="font-medium">{formatDate(entry.date, entry.created_at)}</span>
                   {entry.mood && (
                     <span className="ml-auto text-lg" title={`Mood: ${entry.mood}`}>
                       {moodEmojis[entry.mood] || entry.mood}

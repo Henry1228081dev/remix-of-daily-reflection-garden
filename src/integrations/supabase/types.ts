@@ -14,6 +14,149 @@ export type Database = {
   }
   public: {
     Tables: {
+      cookies: {
+        Row: {
+          description: string
+          earned_at: string
+          id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          description: string
+          earned_at?: string
+          id?: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          description?: string
+          earned_at?: string
+          id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_completions: {
+        Row: {
+          completed_date: string
+          cookie_awarded: boolean
+          created_at: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_date: string
+          cookie_awarded?: boolean
+          created_at?: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string
+          cookie_awarded?: boolean
+          created_at?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          cookies_earned: number | null
+          created_at: string
+          date: string
+          entry: string
+          id: string
+          mood: string | null
+          prompt: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cookies_earned?: number | null
+          created_at?: string
+          date: string
+          entry: string
+          id?: string
+          mood?: string | null
+          prompt?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cookies_earned?: number | null
+          created_at?: string
+          date?: string
+          entry?: string
+          id?: string
+          mood?: string | null
+          prompt?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mood_entries: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          mood: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          mood: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          mood?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -32,6 +175,33 @@ export type Database = {
           id?: string
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      tiny_steps: {
+        Row: {
+          completed: boolean
+          created_at: string
+          date: string
+          id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          date: string
+          id?: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          date?: string
+          id?: string
+          text?: string
+          user_id?: string
         }
         Relationships: []
       }

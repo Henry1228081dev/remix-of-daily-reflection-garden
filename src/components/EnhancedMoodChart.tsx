@@ -1,18 +1,10 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Area, AreaChart } from "recharts";
+import { XAxis, YAxis, ResponsiveContainer, Tooltip, Area, AreaChart } from "recharts";
 import { TrendingUp, Calendar } from "lucide-react";
-import { format, subDays, startOfWeek, eachDayOfInterval } from "date-fns";
+import { format, subDays } from "date-fns";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const STORAGE_KEY = "reflect-journal-entries";
-
-interface JournalEntry {
-  date: string;
-  entry: string;
-  prompt?: string;
-  mood?: string;
-}
+import { useMoodEntries } from "@/hooks/useMoodEntries";
 
 const moodValues: Record<string, number> = {
   great: 6,
@@ -46,16 +38,14 @@ const moodLabels: Record<number, string> = {
 
 const EnhancedMoodChart = () => {
   const [view, setView] = useState<"week" | "month">("week");
+  const { entries, isLoading } = useMoodEntries();
 
   const chartData = useMemo(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const entries: JournalEntry[] = saved ? JSON.parse(saved) : [];
-    
     const days = view === "week" ? 7 : 30;
     
     const data = Array.from({ length: days }, (_, i) => {
       const date = subDays(new Date(), days - 1 - i);
-      const dateString = date.toDateString();
+      const dateString = date.toISOString().split("T")[0];
       const entry = entries.find(e => e.date === dateString);
       
       return {
@@ -69,7 +59,7 @@ const EnhancedMoodChart = () => {
     });
     
     return data;
-  }, [view]);
+  }, [view, entries]);
 
   const hasAnyMood = chartData.some(d => d.value !== null);
   
@@ -104,6 +94,16 @@ const EnhancedMoodChart = () => {
     }
     return null;
   };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-card shadow-card border-0 animate-fade-in-up">
+        <CardContent className="p-6 text-center text-muted-foreground">
+          Loading mood data...
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card shadow-card border-0 animate-fade-in-up">

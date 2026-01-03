@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart } from "lucide-react";
-
-const MOOD_STORAGE_KEY = "reflect-today-mood";
+import { useMoodEntries } from "@/hooks/useMoodEntries";
 
 interface MoodOption {
   emoji: string;
@@ -25,31 +24,20 @@ interface MoodTrackerProps {
 }
 
 const MoodTracker = ({ onMoodSelect }: MoodTrackerProps) => {
-  const today = new Date().toDateString();
-  
-  const [selectedMood, setSelectedMood] = useState<string | null>(() => {
-    const saved = localStorage.getItem(MOOD_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.date === today) {
-        return parsed.mood;
-      }
-    }
-    return null;
-  });
+  const { getTodayMood, upsertMood, isLoading } = useMoodEntries();
+  const todayMood = getTodayMood();
+  const [selectedMood, setSelectedMood] = useState<string | null>(todayMood);
 
   useEffect(() => {
-    if (selectedMood) {
-      localStorage.setItem(MOOD_STORAGE_KEY, JSON.stringify({
-        date: today,
-        mood: selectedMood
-      }));
+    if (todayMood) {
+      setSelectedMood(todayMood);
     }
-  }, [selectedMood, today]);
+  }, [todayMood]);
 
-  const handleMoodSelect = (mood: string) => {
+  const handleMoodSelect = async (mood: string) => {
     setSelectedMood(mood);
     onMoodSelect?.(mood);
+    upsertMood.mutate(mood);
   };
 
   return (
@@ -66,6 +54,7 @@ const MoodTracker = ({ onMoodSelect }: MoodTrackerProps) => {
             <button
               key={mood.value}
               onClick={() => handleMoodSelect(mood.value)}
+              disabled={isLoading || upsertMood.isPending}
               className={`
                 flex flex-col items-center p-3 rounded-xl transition-all duration-200
                 hover:scale-110 hover:bg-sage-light/50
@@ -73,6 +62,7 @@ const MoodTracker = ({ onMoodSelect }: MoodTrackerProps) => {
                   ? "bg-primary/20 ring-2 ring-primary scale-110" 
                   : "bg-secondary/50"
                 }
+                disabled:opacity-50
               `}
               title={mood.label}
             >

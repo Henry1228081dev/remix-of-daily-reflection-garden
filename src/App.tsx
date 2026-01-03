@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import PerspectiveSwap from "./pages/PerspectiveSwap";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
@@ -52,7 +53,26 @@ const OnboardingRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (surveyCompleted) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const surveyCompleted = localStorage.getItem("surveyCompleted") === "true";
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (user && surveyCompleted) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -65,9 +85,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/perspective-swap" element={<ProtectedRoute><PerspectiveSwap /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

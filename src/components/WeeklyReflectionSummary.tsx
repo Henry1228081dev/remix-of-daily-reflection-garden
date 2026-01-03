@@ -1,18 +1,9 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Cookie, BookOpen, TrendingUp, Award } from "lucide-react";
-import { subDays, format } from "date-fns";
-
-const JOURNAL_STORAGE_KEY = "reflect-journal-entries";
-const COOKIE_STORAGE_KEY = "reflect-cookie-jar";
-
-interface JournalEntry {
-  date: string;
-  entry: string;
-  prompt?: string;
-  mood?: string;
-  cookiesEarned?: number;
-}
+import { subDays } from "date-fns";
+import { useJournalEntries } from "@/hooks/useJournalEntries";
+import { useCookies } from "@/hooks/useCookies";
 
 const moodEmojis: Record<string, string> = {
   great: "😀",
@@ -25,17 +16,14 @@ const moodEmojis: Record<string, string> = {
 };
 
 const WeeklyReflectionSummary = () => {
+  const { entries, isLoading: journalLoading } = useJournalEntries();
+  const { cookies, totalCount, isLoading: cookiesLoading } = useCookies();
+
   const weekData = useMemo(() => {
-    const saved = localStorage.getItem(JOURNAL_STORAGE_KEY);
-    const entries: JournalEntry[] = saved ? JSON.parse(saved) : [];
-    
-    const cookiesSaved = localStorage.getItem(COOKIE_STORAGE_KEY);
-    const totalCookies = cookiesSaved ? JSON.parse(cookiesSaved).length : 0;
-    
     // Get entries from the last 7 days
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), i);
-      return date.toDateString();
+      return date.toISOString().split("T")[0];
     });
     
     const weekEntries = entries.filter(e => last7Days.includes(e.date));
@@ -44,7 +32,7 @@ const WeeklyReflectionSummary = () => {
     // Calculate streak
     let streak = 0;
     for (let i = 0; i < 30; i++) {
-      const checkDate = subDays(new Date(), i).toDateString();
+      const checkDate = subDays(new Date(), i).toISOString().split("T")[0];
       if (entries.some(e => e.date === checkDate)) {
         streak++;
       } else if (i > 0) {
@@ -63,7 +51,7 @@ const WeeklyReflectionSummary = () => {
     const dominantMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0];
     
     // Count cookies earned this week
-    const weekCookies = weekEntries.reduce((sum, e) => sum + (e.cookiesEarned || 0), 0);
+    const weekCookies = weekEntries.reduce((sum, e) => sum + (e.cookies_earned || 0), 0);
     
     // Calculate total sentences written
     const totalSentences = weekEntries.reduce((sum, e) => {
@@ -74,13 +62,13 @@ const WeeklyReflectionSummary = () => {
     return {
       daysJournaled,
       streak,
-      totalCookies,
+      totalCookies: totalCount,
       weekCookies,
       dominantMood,
       totalSentences,
       weekEntries,
     };
-  }, []);
+  }, [entries, totalCount]);
 
   const getInsight = () => {
     const { daysJournaled, streak, dominantMood } = weekData;
@@ -112,6 +100,16 @@ const WeeklyReflectionSummary = () => {
     
     return `You journaled ${daysJournaled} day${daysJournaled !== 1 ? 's' : ''} this week. Every entry matters 💚`;
   };
+
+  if (journalLoading || cookiesLoading) {
+    return (
+      <Card className="bg-gradient-to-br from-card to-mint/20 shadow-card border-0 animate-fade-in-up">
+        <CardContent className="p-6 text-center text-muted-foreground">
+          Loading weekly summary...
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-gradient-to-br from-card to-mint/20 shadow-card border-0 animate-fade-in-up">
