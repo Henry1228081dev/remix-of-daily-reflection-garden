@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Info, X } from "lucide-react";
-import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
@@ -18,6 +17,9 @@ import DemoWeeklyStreak from "@/components/demo/DemoWeeklyStreak";
 import DemoCookieShop from "@/components/demo/DemoCookieShop";
 import DemoPerspectiveSwap from "@/components/demo/DemoPerspectiveSwap";
 import CursorEffects from "@/components/demo/CursorEffects";
+import PerfectDayCelebration from "@/components/demo/PerfectDayCelebration";
+import AchievementBadges from "@/components/demo/AchievementBadges";
+import StreakProtection from "@/components/demo/StreakProtection";
 import SafetyNote from "@/components/SafetyNote";
 import { useConfetti } from "@/hooks/useConfetti";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
@@ -45,6 +47,18 @@ const DemoDashboard = () => {
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
   const [totalHabits, setTotalHabits] = useState(3);
   const [totalSteps, setTotalSteps] = useState(3);
+  
+  // Achievement tracking
+  const [habitsCompletedTotal, setHabitsCompletedTotal] = useState(5); // Demo starts with some
+  const [perfectDaysCount, setPerfectDaysCount] = useState(2); // Demo starts with some
+  const [journalEntriesCount, setJournalEntriesCount] = useState(3); // Demo starts with some
+  const [showPerfectDayCelebration, setShowPerfectDayCelebration] = useState(false);
+  const [hasCelebratedToday, setHasCelebratedToday] = useState(false);
+  
+  // Streak protection demo state
+  const [currentStreak, setCurrentStreak] = useState(5); // Demo starts with a streak
+  const [missedDay, setMissedDay] = useState(true); // Show streak protection demo
+  const [streakProtected, setStreakProtected] = useState(false);
   
   // Start with 50 cookies for demo - enough to buy stuff!
   const [cookies, setCookies] = useState([
@@ -82,7 +96,7 @@ const DemoDashboard = () => {
 
   const availableBalance = cookieBalance - spentCookies;
 
-  const { celebrateMilestone, celebratePurchase } = useConfetti();
+  const { celebrateMilestone, celebratePurchase, celebrate } = useConfetti();
   const { playCookieEarned, playPurchase, playEquip, playClick, playSuccess } = useSoundEffects();
 
   // Demo notifications - ask for permission on load, mood prompt after 10s
@@ -93,6 +107,32 @@ const DemoDashboard = () => {
     },
     enabled: true,
   });
+
+  // Check for perfect day
+  const isPerfectDay = useMemo(() => {
+    if (totalHabits === 0 && totalSteps === 0) return false;
+    
+    const habitsComplete = totalHabits > 0 && 
+      Object.values(completedHabits).filter(Boolean).length >= totalHabits;
+    const stepsComplete = totalSteps > 0 && 
+      Object.values(completedSteps).filter(Boolean).length >= totalSteps;
+    
+    return habitsComplete && stepsComplete;
+  }, [completedHabits, completedSteps, totalHabits, totalSteps]);
+
+  // Trigger perfect day celebration
+  useEffect(() => {
+    if (isPerfectDay && !hasCelebratedToday) {
+      setShowPerfectDayCelebration(true);
+      setHasCelebratedToday(true);
+      setPerfectDaysCount(prev => prev + 1);
+      
+      // Award bonus cookie for perfect day
+      setTimeout(() => {
+        handleAddCookie("🏆 Perfect Day Achievement!", "bonus");
+      }, 500);
+    }
+  }, [isPerfectDay, hasCelebratedToday]);
 
   const handleAddCookie = (description: string, source: string) => {
     const newCookie = {
@@ -160,6 +200,27 @@ const DemoDashboard = () => {
     handleEquip(null, "theme");
   };
 
+  const handleStreakProtect = (cost: number) => {
+    setSpentCookies(prev => prev + cost);
+    setStreakProtected(true);
+    setMissedDay(false);
+    celebrate("epic");
+    playSuccess();
+  };
+
+  const handleHabitComplete = (habitId: string, completed: boolean) => {
+    playClick();
+    setCompletedHabits(prev => ({ ...prev, [habitId]: completed }));
+    if (completed) {
+      setHabitsCompletedTotal(prev => prev + 1);
+    }
+  };
+
+  const handleJournalSave = (desc: string) => {
+    handleAddCookie(desc, "journal");
+    setJournalEntriesCount(prev => prev + 1);
+  };
+
   // Apply theme class to document when equipped theme changes
   useEffect(() => {
     // Remove all theme classes first
@@ -183,8 +244,23 @@ const DemoDashboard = () => {
     };
   }, [equippedTheme]);
 
+  // Achievement stats
+  const achievementStats = useMemo(() => ({
+    currentStreak: streakProtected ? currentStreak : (missedDay ? 0 : currentStreak),
+    totalCookies: cookieBalance,
+    habitsCompleted: habitsCompletedTotal,
+    perfectDays: perfectDaysCount,
+    journalEntries: journalEntriesCount,
+  }), [currentStreak, streakProtected, missedDay, cookieBalance, habitsCompletedTotal, perfectDaysCount, journalEntriesCount]);
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Perfect Day Celebration Overlay */}
+      <PerfectDayCelebration 
+        isActive={showPerfectDayCelebration} 
+        onComplete={() => setShowPerfectDayCelebration(false)}
+      />
+
       {/* Demo Banner */}
       {showBanner && (
         <div className="bg-primary/10 border-b border-primary/20 px-4 py-3">
@@ -235,6 +311,19 @@ const DemoDashboard = () => {
             </Link>
           </div>
         </header>
+
+        {/* Streak Protection Alert */}
+        {missedDay && !streakProtected && (
+          <div className="mb-6">
+            <StreakProtection
+              currentStreak={currentStreak}
+              missedDay={missedDay}
+              cookieBalance={availableBalance}
+              onProtect={handleStreakProtect}
+              protectionCost={10}
+            />
+          </div>
+        )}
         
         <HeroSection onStartCheckIn={() => {
           playClick();
@@ -250,7 +339,7 @@ const DemoDashboard = () => {
             <ReflectionPrompts isVisible={showReflection} />
             <DemoCheckInJournal 
               selectedMood={selectedMood} 
-              onCookieEarned={(desc) => handleAddCookie(desc, "journal")}
+              onCookieEarned={handleJournalSave}
             />
           </div>
         )}
@@ -271,6 +360,14 @@ const DemoDashboard = () => {
               totalHabits={totalHabits}
               totalSteps={totalSteps}
             />
+            <AchievementBadges 
+              stats={achievementStats}
+              onAchievementUnlock={(achievement) => {
+                celebrate("large");
+                // Award bonus cookie for achievement
+                handleAddCookie(`🏅 Achievement: ${achievement.name}`, "bonus");
+              }}
+            />
             <DemoMoodChart />
             <DemoPastJournalsCard />
           </div>
@@ -278,10 +375,7 @@ const DemoDashboard = () => {
           <div className="space-y-6">
             <DemoHabitTrackerCard 
               onCookieEarned={(desc) => handleAddCookie(desc, "habit")} 
-              onHabitToggle={(habitId, completed) => {
-                playClick();
-                setCompletedHabits(prev => ({ ...prev, [habitId]: completed }));
-              }}
+              onHabitToggle={handleHabitComplete}
               onHabitsChange={(count) => setTotalHabits(count)}
             />
             <DemoTinyStepsCard 
