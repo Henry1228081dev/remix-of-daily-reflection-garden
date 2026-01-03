@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Crown, Palette, Award, Zap, MousePointer } from "lucide-react";
+import { X, Sparkles, Crown, Palette, Award, Zap, MousePointer, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ShopItemCard, { ShopItem } from "./ShopItemCard";
 
@@ -13,7 +13,8 @@ interface DemoCookieShopProps {
   equippedAvatar: string | null;
   equippedTheme: string | null;
   equippedCursor: string | null;
-  onEquip: (itemId: string, type: "avatar" | "theme" | "cursor") => void;
+  onEquip: (itemId: string | null, type: "avatar" | "theme" | "cursor") => void;
+  onResetTheme?: () => void;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
@@ -71,11 +72,15 @@ const DemoCookieShop = ({
   equippedAvatar,
   equippedTheme,
   equippedCursor,
-  onEquip
+  onEquip,
+  onResetTheme
 }: DemoCookieShopProps) => {
   const [activeCategory, setActiveCategory] = useState("avatar");
 
   const filteredItems = SHOP_ITEMS.filter(item => item.category === activeCategory);
+  
+  // Check if user has any owned themes
+  const ownedThemes = ownedItems.filter(id => id.startsWith("theme-"));
 
   return (
     <AnimatePresence>
@@ -184,6 +189,20 @@ const DemoCookieShop = ({
 
             {/* Items Grid */}
             <div className="p-6 overflow-y-auto max-h-[60vh] bg-gradient-to-b from-transparent to-secondary/30">
+              {/* Theme Reset Button - only show in themes tab when user has themes */}
+              {activeCategory === "theme" && ownedThemes.length > 0 && equippedTheme && (
+                <div className="mb-4 flex justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={onResetTheme}
+                    className="gap-2 border-primary/30 hover:border-primary"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Reset to Default Theme
+                  </Button>
+                </div>
+              )}
+              
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredItems.map(item => (
                   <ShopItemCard
