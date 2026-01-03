@@ -11,6 +11,7 @@ const COOKIE_STORAGE_KEY = "reflect-cookie-jar";
 
 interface JournalEntry {
   date: string;
+  timestamp?: string;
   entry: string;
   prompt?: string;
   mood?: string;
@@ -93,8 +94,10 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
 
   const saveEntry = () => {
     if (entry.trim()) {
+      const now = new Date();
       const newEntry: JournalEntry = {
         date: today,
+        timestamp: now.toISOString(),
         entry: entry.trim(),
         prompt: currentPrompt || undefined,
         mood: selectedMood || undefined,
