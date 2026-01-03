@@ -139,16 +139,23 @@ const Demo = () => {
       {/* CTA */}
       <section className="max-w-2xl mx-auto px-6 py-16 text-center">
         <h2 className="text-3xl font-serif font-bold text-foreground mb-4">
-          Ready to start your journey?
+          Ready to try it yourself?
         </h2>
         <p className="text-muted-foreground mb-8">
-          Join thousands who are building better mental wellness habits.
+          Explore the full app experience in demo mode, or create an account to save your progress.
         </p>
-        <Link to="/auth">
-          <Button size="lg" className="rounded-full px-8">
-            Get Started Free
-          </Button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/demo/app">
+            <Button size="lg" variant="outline" className="rounded-full px-8">
+              Try Demo Mode
+            </Button>
+          </Link>
+          <Link to="/auth">
+            <Button size="lg" className="rounded-full px-8">
+              Get Started Free
+            </Button>
+          </Link>
+        </div>
       </section>
 
       {/* Footer */}
