@@ -25,6 +25,7 @@ interface EnhancedCheckInJournalProps {
   selectedMood?: string | null;
   onSave?: () => void;
   onCookieUpdate?: (count: number) => void;
+  onClose?: () => void;
 }
 
 // Count valid sentences - must have real words, proper length, and meaningful content
@@ -54,7 +55,7 @@ const countValidSentences = (text: string): number => {
   }).length;
 };
 
-const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: EnhancedCheckInJournalProps) => {
+const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate, onClose }: EnhancedCheckInJournalProps) => {
   const today = new Date().toISOString().split("T")[0];
   const { toast } = useToast();
   
@@ -173,7 +174,10 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
         setInvalidReasons([]);
         
         setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+        setTimeout(() => {
+          setSaved(false);
+          onClose?.();
+        }, 1000);
         onSave?.();
         
         toast({
