@@ -8,9 +8,10 @@ const STORAGE_KEY = "reflect-daily-reflection";
 
 interface ReflectionPromptsProps {
   isVisible: boolean;
+  onClose?: () => void;
 }
 
-const ReflectionPrompts = ({ isVisible }: ReflectionPromptsProps) => {
+const ReflectionPrompts = ({ isVisible, onClose }: ReflectionPromptsProps) => {
   const [responses, setResponses] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -33,7 +34,10 @@ const ReflectionPrompts = ({ isVisible }: ReflectionPromptsProps) => {
 
   const handleSave = () => {
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => {
+      setSaved(false);
+      onClose?.();
+    }, 1000);
   };
 
   if (!isVisible) return null;

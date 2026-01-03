@@ -48,11 +48,12 @@ const Index = () => {
         {showReflection && (
           <div className="py-6 space-y-6">
             <MoodTracker onMoodSelect={setSelectedMood} />
-            <ReflectionPrompts isVisible={showReflection} />
+            <ReflectionPrompts isVisible={showReflection} onClose={() => setShowReflection(false)} />
             <EnhancedCheckInJournal 
               selectedMood={selectedMood} 
               onSave={handleJournalSave}
               onCookieUpdate={handleCookieUpdate}
+              onClose={() => setShowReflection(false)}
             />
           </div>
         )}
