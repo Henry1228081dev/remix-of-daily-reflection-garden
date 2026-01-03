@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Check, Cookie, Sparkles } from "lucide-react";
-import { useSentenceTracker } from "@/hooks/useSentenceTracker";
 import KindNoteNotification from "./KindNoteNotification";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "reflect-journal-entries";
 const COOKIE_STORAGE_KEY = "reflect-cookie-jar";
@@ -35,6 +35,33 @@ interface EnhancedCheckInJournalProps {
   onCookieUpdate?: (count: number) => void;
 }
 
+// Count valid sentences - must have real words, proper length, and meaningful content
+const countValidSentences = (text: string): number => {
+  if (!text.trim()) return 0;
+  
+  // Split by sentence-ending punctuation
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+  
+  // Count sentences with meaningful content
+  return sentences.filter(sentence => {
+    const trimmed = sentence.trim();
+    
+    // Filter out repeated characters (like "aaaa" or "....")
+    if (/^(.)\1{3,}$/.test(trimmed)) return false;
+    
+    // Filter out gibberish (mostly consonants with no vowels)
+    const hasVowels = /[aeiouAEIOU]/.test(trimmed);
+    if (!hasVowels && trimmed.length > 2) return false;
+    
+    // Must have at least 4 distinct words (not repeated)
+    const words = trimmed.split(/\s+/).filter(w => w.length > 1 && /[a-zA-Z]/.test(w));
+    const uniqueWords = new Set(words.map(w => w.toLowerCase()));
+    
+    // Need at least 4 unique words and at least 5 total words
+    return uniqueWords.size >= 4 && words.length >= 5;
+  }).length;
+};
+
 const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: EnhancedCheckInJournalProps) => {
   const today = new Date().toDateString();
   
@@ -46,19 +73,24 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
   const todayEntry = entries.find(e => e.date === today);
   const [entry, setEntry] = useState(todayEntry?.entry || "");
   const [currentPrompt, setCurrentPrompt] = useState(() => {
-    // Auto-set a random prompt on load
     return todayEntry?.prompt || prompts[Math.floor(Math.random() * prompts.length)];
   });
   const [saved, setSaved] = useState(false);
-  const [sessionCookies, setSessionCookies] = useState(0);
   const [kindNote, setKindNote] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Track sentence counts: baseline is what was already saved, current is live count
+  const baselineSentenceCount = useRef(todayEntry?.cookiesEarned ?? countValidSentences(todayEntry?.entry || ""));
+  const [currentSentenceCount, setCurrentSentenceCount] = useState(() => 
+    countValidSentences(todayEntry?.entry || "")
+  );
+  const [sessionCookiesEarned, setSessionCookiesEarned] = useState(0);
+  const isGeneratingNote = useRef(false);
 
-  const handleCookieEarned = useCallback((count: number) => {
-    setSessionCookies(prev => prev + count);
+  const addCookiesToJar = useCallback((count: number) => {
+    if (count <= 0) return;
     
-    // Add cookies to the cookie jar
     const savedCookies = localStorage.getItem(COOKIE_STORAGE_KEY);
     const cookies: string[] = savedCookies ? JSON.parse(savedCookies) : [];
     
@@ -71,16 +103,36 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
     onCookieUpdate?.(cookies.length);
   }, [onCookieUpdate]);
 
-  const handleKindNote = useCallback((note: string) => {
-    setKindNote(note);
-    setShowNotification(true);
-  }, []);
+  const generateKindNote = useCallback(async (text: string, sentenceCount: number) => {
+    if (isGeneratingNote.current || sentenceCount === 0) return;
+    
+    isGeneratingNote.current = true;
 
-  const { trackText, sentenceCount } = useSentenceTracker({
-    onCookieEarned: handleCookieEarned,
-    onKindNote: handleKindNote,
-    mood: selectedMood,
-  });
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-kind-note', {
+        body: { journalText: text, sentenceCount, mood: selectedMood }
+      });
+
+      if (error) {
+        console.error('Error generating kind note:', error);
+        const fallbackNotes = [
+          `${sentenceCount} sentences! You're building something beautiful 🌱`,
+          `Look at you go! ${sentenceCount} thoughtful sentences 💚`,
+          `Every word counts. You've written ${sentenceCount} full thoughts! ✨`,
+          `${sentenceCount} sentences of pure reflection. Keep flowing 🌊`,
+        ];
+        setKindNote(fallbackNotes[sentenceCount % fallbackNotes.length]);
+        setShowNotification(true);
+      } else if (data?.note) {
+        setKindNote(data.note);
+        setShowNotification(true);
+      }
+    } catch (err) {
+      console.error('Failed to generate kind note:', err);
+    } finally {
+      isGeneratingNote.current = false;
+    }
+  }, [selectedMood]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
@@ -89,25 +141,43 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setEntry(newText);
-    trackText(newText);
+    
+    const newCount = countValidSentences(newText);
+    setCurrentSentenceCount(newCount);
+    
+    // Only award cookies for NEW sentences beyond what was already saved
+    const newCookies = newCount - baselineSentenceCount.current;
+    
+    if (newCookies > sessionCookiesEarned) {
+      const cookiesToAdd = newCookies - sessionCookiesEarned;
+      setSessionCookiesEarned(newCookies);
+      addCookiesToJar(cookiesToAdd);
+      generateKindNote(newText, newCount);
+    }
   };
 
   const saveEntry = () => {
     if (entry.trim()) {
       const now = new Date();
+      const totalCookies = (todayEntry?.cookiesEarned ?? 0) + sessionCookiesEarned;
+      
       const newEntry: JournalEntry = {
         date: today,
         timestamp: now.toISOString(),
         entry: entry.trim(),
         prompt: currentPrompt || undefined,
         mood: selectedMood || undefined,
-        cookiesEarned: sessionCookies,
+        cookiesEarned: totalCookies,
       };
       
       setEntries(prev => {
         const filtered = prev.filter(e => e.date !== today);
         return [...filtered, newEntry];
       });
+      
+      // Update baseline after save so further edits don't double-count
+      baselineSentenceCount.current = countValidSentences(entry.trim());
+      setSessionCookiesEarned(0);
       
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -116,19 +186,19 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
   };
 
   const getEncouragementText = () => {
-    if (sentenceCount === 0) {
+    if (currentSentenceCount === 0) {
       return "Start with just one sentence. You've got this! ✨";
     }
-    if (sentenceCount === 1) {
+    if (currentSentenceCount === 1) {
       return "Beautiful start! Try adding another thought 🌱";
     }
-    if (sentenceCount === 2) {
+    if (currentSentenceCount === 2) {
       return "You're on a roll! One more? 💚";
     }
-    if (sentenceCount === 3) {
+    if (currentSentenceCount === 3) {
       return "Three sentences! You're really opening up 🌟";
     }
-    return `Amazing! ${sentenceCount} thoughtful reflections 🎉`;
+    return `Amazing! ${currentSentenceCount} thoughtful reflections 🎉`;
   };
 
   return (
@@ -141,11 +211,11 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
               Today's journal
             </CardTitle>
             
-            {sessionCookies > 0 && (
+            {sessionCookiesEarned > 0 && (
               <div className="flex items-center gap-1.5 bg-accent/50 px-3 py-1 rounded-full animate-fade-in">
                 <Cookie className="w-4 h-4 text-terracotta" />
                 <span className="text-sm font-semibold text-accent-foreground">
-                  +{sessionCookies}
+                  +{sessionCookiesEarned}
                 </span>
               </div>
             )}
@@ -175,9 +245,9 @@ const EnhancedCheckInJournal = ({ selectedMood, onSave, onCookieUpdate }: Enhanc
               {getEncouragementText()}
             </p>
             
-            {sentenceCount > 0 && (
+            {currentSentenceCount > 0 && (
               <span className="text-xs text-primary font-medium">
-                {sentenceCount} sentence{sentenceCount !== 1 ? 's' : ''}
+                {currentSentenceCount} sentence{currentSentenceCount !== 1 ? 's' : ''}
               </span>
             )}
           </div>
