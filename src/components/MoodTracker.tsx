@@ -82,7 +82,7 @@ const MoodTracker = ({ onMoodSelect }: MoodTrackerProps) => {
           ))}
         </div>
         <p className="text-xs text-muted-foreground italic text-center">
-          Your mood isn't good or bad — it just is. 💚
+          Your mood isn't good or bad. It just is. 💚
         </p>
       </CardContent>
     </Card>

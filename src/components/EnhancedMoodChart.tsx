@@ -136,7 +136,7 @@ const EnhancedMoodChart = () => {
           <div className="text-center py-8">
             <Calendar className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
             <p className="text-muted-foreground italic">
-              No mood data yet — start checking in to see your patterns 🌱
+              No mood data yet. Start checking in to see your patterns 🌱
             </p>
           </div>
         ) : (
