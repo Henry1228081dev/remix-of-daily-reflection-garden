@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
+import Demo from "./pages/Demo";
 import PerspectiveSwap from "./pages/PerspectiveSwap";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
@@ -86,6 +87,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+          <Route path="/demo" element={<Demo />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
