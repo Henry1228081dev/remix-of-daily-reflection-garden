@@ -72,6 +72,7 @@ const Index = () => {
             <WeeklyReflectionSummary key={`weekly-${journalKey}`} />
             <EnhancedMoodChart key={`mood-${journalKey}`} />
             <PastJournalsCard key={`journal-${journalKey}`} />
+            <MoodNotificationSettings />
           </div>
 
           {/* Right column */}
@@ -85,7 +86,6 @@ const Index = () => {
               cookieJarRef.current?.refresh();
             }} />
             <CookieJarCard ref={cookieJarRef} externalCount={cookieCount} />
-            <MoodNotificationSettings />
             <KindNotesCard />
           </div>
         </div>
