@@ -47,9 +47,11 @@ const Landing = () => {
               Get Started Free
             </Button>
           </Link>
-          <Button variant="ghost" size="lg" className="rounded-full px-8 py-6 text-lg text-muted-foreground">
-            How it works
-          </Button>
+          <Link to="/demo">
+            <Button variant="ghost" size="lg" className="rounded-full px-8 py-6 text-lg text-muted-foreground">
+              How it works
+            </Button>
+          </Link>
         </div>
       </main>
 
