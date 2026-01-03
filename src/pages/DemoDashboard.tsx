@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Info, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Info, X, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
@@ -40,9 +40,9 @@ const THEME_CLASS_MAP: Record<string, string> = {
 type ViewState = "perspective" | "checkin" | "dashboard";
 
 const DemoDashboard = () => {
-  // Navigation state - start with perspective swap as landing
-  const [currentView, setCurrentView] = useState<ViewState>("perspective");
-  const [viewHistory, setViewHistory] = useState<ViewState[]>(["perspective"]);
+  // Navigation state - start with dashboard
+  const [currentView, setCurrentView] = useState<ViewState>("dashboard");
+  const [viewHistory, setViewHistory] = useState<ViewState[]>(["dashboard"]);
   const [historyIndex, setHistoryIndex] = useState(0);
   
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
@@ -241,12 +241,12 @@ const DemoDashboard = () => {
     navigateTo("dashboard");
   };
 
-  const handlePerspectiveComplete = () => {
-    navigateTo("dashboard");
+  const handleOpenPerspective = () => {
+    navigateTo("perspective");
   };
 
-  const handleSkipPerspective = () => {
-    navigateTo("dashboard");
+  const handleClosePerspective = () => {
+    goBack();
   };
 
   // Apply theme class
@@ -269,41 +269,29 @@ const DemoDashboard = () => {
     journalEntries: journalEntriesCount,
   }), [currentStreak, streakProtected, missedDay, cookieBalance, habitsCompletedTotal, perfectDaysCount, journalEntriesCount]);
 
-  // Render Perspective Swap Landing (initial view)
+  // Render Perspective Swap (clean, distraction-free view)
   if (currentView === "perspective") {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          {/* Header */}
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          {/* Minimal Header */}
           <header className="flex items-center justify-between mb-8">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="text-xl font-semibold text-foreground">🌿 Reflect</span>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                DEMO
-              </span>
-            </Link>
-            <Button variant="ghost" size="sm" onClick={handleSkipPerspective}>
-              Skip to Dashboard →
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleClosePerspective}
+              className="gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
             </Button>
+            <span className="text-lg font-semibold text-foreground">🌿 Reflect</span>
+            <div className="w-16" /> {/* Spacer for centering */}
           </header>
 
-          {/* Main Perspective Swap */}
-          <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Welcome to Reflect 🌿
-            </h1>
-            <p className="text-muted-foreground">
-              Let's start by getting a different perspective on something.
-            </p>
-          </div>
-
-          <DemoPerspectiveSwap onShow={handlePerspectiveComplete} />
-
-          <div className="mt-8 text-center">
-            <Button onClick={handleSkipPerspective} variant="outline" className="gap-2">
-              Continue to Dashboard
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+          {/* Clean Perspective Swap - no distractions */}
+          <div className="animate-fade-in">
+            <DemoPerspectiveSwap />
           </div>
         </div>
         <CursorEffects equippedCursor={equippedCursor} />
@@ -525,6 +513,19 @@ const DemoDashboard = () => {
             />
             <DemoKindNotesCard />
           </div>
+        </div>
+
+        {/* Perspective Swap Button at bottom */}
+        <div className="py-8 max-w-md mx-auto text-center">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleOpenPerspective}
+            className="group border-2 border-primary/30 hover:border-primary hover:bg-sage-light/50"
+          >
+            <RefreshCw className="w-5 h-5 mr-2 group-hover:rotate-180 transition-transform duration-500" />
+            Get a new perspective on something
+          </Button>
         </div>
 
         {/* Achievements at the end */}
