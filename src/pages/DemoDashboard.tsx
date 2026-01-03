@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Info, X } from "lucide-react";
+import { Info, X, ChevronLeft, ChevronRight } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
@@ -13,7 +13,7 @@ import DemoKindNotesCard from "@/components/demo/DemoKindNotesCard";
 import DemoMoodTracker from "@/components/demo/DemoMoodTracker";
 import DemoMoodChart from "@/components/demo/DemoMoodChart";
 import DemoCheckInJournal from "@/components/demo/DemoCheckInJournal";
-import DemoWeeklyStreak from "@/components/demo/DemoWeeklyStreak";
+import DemoWeeklyReflection from "@/components/demo/DemoWeeklyReflection";
 import DemoCookieShop from "@/components/demo/DemoCookieShop";
 import DemoPerspectiveSwap from "@/components/demo/DemoPerspectiveSwap";
 import CursorEffects from "@/components/demo/CursorEffects";
@@ -36,11 +36,19 @@ const THEME_CLASS_MAP: Record<string, string> = {
   "theme-aurora": "theme-aurora",
 };
 
+// View states for navigation
+type ViewState = "perspective" | "checkin" | "dashboard";
+
 const DemoDashboard = () => {
-  const [showReflection, setShowReflection] = useState(false);
+  // Navigation state - start with perspective swap as landing
+  const [currentView, setCurrentView] = useState<ViewState>("perspective");
+  const [viewHistory, setViewHistory] = useState<ViewState[]>(["perspective"]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [showBanner, setShowBanner] = useState(true);
   const [showShop, setShowShop] = useState(false);
+  const [checkInComplete, setCheckInComplete] = useState(false);
   
   // Track completed habits and steps for streak
   const [completedHabits, setCompletedHabits] = useState<Record<string, boolean>>({});
@@ -49,18 +57,18 @@ const DemoDashboard = () => {
   const [totalSteps, setTotalSteps] = useState(3);
   
   // Achievement tracking
-  const [habitsCompletedTotal, setHabitsCompletedTotal] = useState(5); // Demo starts with some
-  const [perfectDaysCount, setPerfectDaysCount] = useState(2); // Demo starts with some
-  const [journalEntriesCount, setJournalEntriesCount] = useState(3); // Demo starts with some
+  const [habitsCompletedTotal, setHabitsCompletedTotal] = useState(5);
+  const [perfectDaysCount, setPerfectDaysCount] = useState(2);
+  const [journalEntriesCount, setJournalEntriesCount] = useState(3);
   const [showPerfectDayCelebration, setShowPerfectDayCelebration] = useState(false);
   const [hasCelebratedToday, setHasCelebratedToday] = useState(false);
   
   // Streak protection demo state
-  const [currentStreak, setCurrentStreak] = useState(5); // Demo starts with a streak
-  const [missedDay, setMissedDay] = useState(true); // Show streak protection demo
+  const [currentStreak, setCurrentStreak] = useState(5);
+  const [missedDay, setMissedDay] = useState(true);
   const [streakProtected, setStreakProtected] = useState(false);
   
-  // Start with 50 cookies for demo - enough to buy stuff!
+  // Cookie state
   const [cookies, setCookies] = useState([
     { id: "1", description: "Completed morning meditation", earned_at: new Date().toISOString(), source: "habit" },
     { id: "2", description: "Wrote in journal", earned_at: new Date().toISOString(), source: "journal" },
@@ -74,7 +82,6 @@ const DemoDashboard = () => {
     { id: "10", description: "Perfect day bonus!", earned_at: new Date().toISOString(), source: "bonus" },
   ]);
   
-  // For every 5 cookies, add 5 more to get to 50 total
   const [bonusCookies] = useState(() => 
     Array.from({ length: 40 }, (_, i) => ({
       id: `bonus-${i + 11}`,
@@ -99,35 +106,57 @@ const DemoDashboard = () => {
   const { celebrateMilestone, celebratePurchase, celebrate } = useConfetti();
   const { playCookieEarned, playPurchase, playEquip, playClick, playSuccess } = useSoundEffects();
 
-  // Demo notifications - ask for permission on load, mood prompt after 10s
   useDemoNotifications({
     onMoodSelect: (mood) => {
       setSelectedMood(mood);
       playSuccess();
     },
-    enabled: true,
+    enabled: currentView === "dashboard",
   });
+
+  // Navigation functions
+  const navigateTo = (view: ViewState) => {
+    const newHistory = [...viewHistory.slice(0, historyIndex + 1), view];
+    setViewHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    setCurrentView(view);
+    playClick();
+  };
+
+  const goBack = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setCurrentView(viewHistory[newIndex]);
+      playClick();
+    }
+  };
+
+  const goForward = () => {
+    if (historyIndex < viewHistory.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setCurrentView(viewHistory[newIndex]);
+      playClick();
+    }
+  };
+
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex < viewHistory.length - 1;
 
   // Check for perfect day
   const isPerfectDay = useMemo(() => {
     if (totalHabits === 0 && totalSteps === 0) return false;
-    
-    const habitsComplete = totalHabits > 0 && 
-      Object.values(completedHabits).filter(Boolean).length >= totalHabits;
-    const stepsComplete = totalSteps > 0 && 
-      Object.values(completedSteps).filter(Boolean).length >= totalSteps;
-    
+    const habitsComplete = totalHabits > 0 && Object.values(completedHabits).filter(Boolean).length >= totalHabits;
+    const stepsComplete = totalSteps > 0 && Object.values(completedSteps).filter(Boolean).length >= totalSteps;
     return habitsComplete && stepsComplete;
   }, [completedHabits, completedSteps, totalHabits, totalSteps]);
 
-  // Trigger perfect day celebration
   useEffect(() => {
     if (isPerfectDay && !hasCelebratedToday) {
       setShowPerfectDayCelebration(true);
       setHasCelebratedToday(true);
       setPerfectDaysCount(prev => prev + 1);
-      
-      // Award bonus cookie for perfect day
       setTimeout(() => {
         handleAddCookie("🏆 Perfect Day Achievement!", "bonus");
       }, 500);
@@ -142,21 +171,13 @@ const DemoDashboard = () => {
       source
     };
     setCookies(prev => [...prev, newCookie]);
-    
-    // Play sound effect
     playCookieEarned();
-    
-    // Check for milestone celebrations
     const newCount = cookies.length + 1;
     celebrateMilestone(newCount);
     
-    if (newCount === 1) {
-      toast.success("🍪 Your first cookie! Keep it up!");
-    } else if (newCount === 5) {
-      toast.success("🎉 5 cookies! You're on a roll!");
-    } else if (newCount === 10) {
-      toast.success("🔥 10 cookies! Amazing progress!");
-    }
+    if (newCount === 1) toast.success("🍪 Your first cookie! Keep it up!");
+    else if (newCount === 5) toast.success("🎉 5 cookies! You're on a roll!");
+    else if (newCount === 10) toast.success("🔥 10 cookies! Amazing progress!");
   };
 
   const handlePurchase = (item: ShopItem) => {
@@ -167,22 +188,14 @@ const DemoDashboard = () => {
       playPurchase();
       toast.success(`🎁 Purchased ${item.name}!`);
       
-      // Auto-equip if it's the first avatar/theme/cursor
-      if (item.category === "avatar" && !equippedAvatar) {
-        setEquippedAvatar(item.id);
-      }
-      if (item.category === "theme" && !equippedTheme) {
-        setEquippedTheme(item.id);
-      }
-      if (item.category === "cursor" && !equippedCursor) {
-        setEquippedCursor(item.id);
-      }
+      if (item.category === "avatar" && !equippedAvatar) setEquippedAvatar(item.id);
+      if (item.category === "theme" && !equippedTheme) setEquippedTheme(item.id);
+      if (item.category === "cursor" && !equippedCursor) setEquippedCursor(item.id);
     }
   };
 
   const handleEquip = (itemId: string | null, type: "avatar" | "theme" | "cursor") => {
     playEquip();
-    
     if (type === "avatar") {
       setEquippedAvatar(itemId);
       toast.success(itemId ? "Avatar equipped!" : "Avatar unequipped!");
@@ -211,40 +224,43 @@ const DemoDashboard = () => {
   const handleHabitComplete = (habitId: string, completed: boolean) => {
     playClick();
     setCompletedHabits(prev => ({ ...prev, [habitId]: completed }));
-    if (completed) {
-      setHabitsCompletedTotal(prev => prev + 1);
-    }
+    if (completed) setHabitsCompletedTotal(prev => prev + 1);
   };
 
   const handleJournalSave = (desc: string) => {
     handleAddCookie(desc, "journal");
     setJournalEntriesCount(prev => prev + 1);
+    setCheckInComplete(true);
   };
 
-  // Apply theme class to document when equipped theme changes
+  const handleStartCheckIn = () => {
+    navigateTo("checkin");
+  };
+
+  const handleFinishCheckIn = () => {
+    navigateTo("dashboard");
+  };
+
+  const handlePerspectiveComplete = () => {
+    navigateTo("dashboard");
+  };
+
+  const handleSkipPerspective = () => {
+    navigateTo("dashboard");
+  };
+
+  // Apply theme class
   useEffect(() => {
-    // Remove all theme classes first
-    Object.values(THEME_CLASS_MAP).forEach(cls => {
-      document.documentElement.classList.remove(cls);
-    });
-    
-    // Apply new theme if one is equipped
+    Object.values(THEME_CLASS_MAP).forEach(cls => document.documentElement.classList.remove(cls));
     if (equippedTheme) {
       const themeClass = THEME_CLASS_MAP[equippedTheme];
-      if (themeClass) {
-        document.documentElement.classList.add(themeClass);
-      }
+      if (themeClass) document.documentElement.classList.add(themeClass);
     }
-    
-    // Cleanup on unmount - remove theme classes
     return () => {
-      Object.values(THEME_CLASS_MAP).forEach(cls => {
-        document.documentElement.classList.remove(cls);
-      });
+      Object.values(THEME_CLASS_MAP).forEach(cls => document.documentElement.classList.remove(cls));
     };
   }, [equippedTheme]);
 
-  // Achievement stats
   const achievementStats = useMemo(() => ({
     currentStreak: streakProtected ? currentStreak : (missedDay ? 0 : currentStreak),
     totalCookies: cookieBalance,
@@ -253,22 +269,145 @@ const DemoDashboard = () => {
     journalEntries: journalEntriesCount,
   }), [currentStreak, streakProtected, missedDay, cookieBalance, habitsCompletedTotal, perfectDaysCount, journalEntriesCount]);
 
+  // Render Perspective Swap Landing (initial view)
+  if (currentView === "perspective") {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          {/* Header */}
+          <header className="flex items-center justify-between mb-8">
+            <Link to="/" className="flex items-center gap-2">
+              <span className="text-xl font-semibold text-foreground">🌿 Reflect</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                DEMO
+              </span>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={handleSkipPerspective}>
+              Skip to Dashboard →
+            </Button>
+          </header>
+
+          {/* Main Perspective Swap */}
+          <div className="text-center mb-8 animate-fade-in">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Welcome to Reflect 🌿
+            </h1>
+            <p className="text-muted-foreground">
+              Let's start by getting a different perspective on something.
+            </p>
+          </div>
+
+          <DemoPerspectiveSwap onShow={handlePerspectiveComplete} />
+
+          <div className="mt-8 text-center">
+            <Button onClick={handleSkipPerspective} variant="outline" className="gap-2">
+              Continue to Dashboard
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <CursorEffects equippedCursor={equippedCursor} />
+      </div>
+    );
+  }
+
+  // Render Check-in View (only check-in related content)
+  if (currentView === "checkin") {
+    return (
+      <div className="min-h-screen bg-background">
+        <PerfectDayCelebration 
+          isActive={showPerfectDayCelebration} 
+          onComplete={() => setShowPerfectDayCelebration(false)}
+        />
+
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          {/* Navigation */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goBack}
+                disabled={!canGoBack}
+                className={!canGoBack ? "opacity-50" : ""}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goForward}
+                disabled={!canGoForward}
+                className={!canGoForward ? "opacity-50" : ""}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <Link to="/" className="flex items-center gap-2">
+              <span className="text-xl font-semibold text-foreground">🌿 Reflect</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                DEMO
+              </span>
+            </Link>
+
+            {checkInComplete && (
+              <Button onClick={handleFinishCheckIn} className="gap-2">
+                View Dashboard
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Check-in Content */}
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-foreground mb-2">Daily Check-In ✨</h1>
+              <p className="text-muted-foreground">Take a moment to reflect on how you're feeling.</p>
+            </div>
+
+            <DemoMoodTracker onMoodSelect={(mood) => {
+              playClick();
+              setSelectedMood(mood);
+            }} />
+            
+            <ReflectionPrompts isVisible={true} />
+            
+            <DemoCheckInJournal 
+              selectedMood={selectedMood} 
+              onCookieEarned={handleJournalSave}
+            />
+
+            {checkInComplete && (
+              <div className="pt-4 text-center">
+                <Button onClick={handleFinishCheckIn} size="lg" className="gap-2">
+                  Continue to Dashboard
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        <CursorEffects equippedCursor={equippedCursor} />
+      </div>
+    );
+  }
+
+  // Render Main Dashboard
   return (
     <div className="min-h-screen bg-background">
-      {/* Perfect Day Celebration Overlay */}
       <PerfectDayCelebration 
         isActive={showPerfectDayCelebration} 
         onComplete={() => setShowPerfectDayCelebration(false)}
       />
 
-      {/* Demo Banner */}
       {showBanner && (
         <div className="bg-primary/10 border-b border-primary/20 px-4 py-3">
           <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Info className="w-5 h-5 text-primary flex-shrink-0" />
               <p className="text-sm text-foreground">
-                <span className="font-medium">Demo Mode:</span> You're exploring Reflect! Changes won't be saved.{" "}
+                <span className="font-medium">Demo Mode:</span> You're exploring Reflect!{" "}
                 <Link to="/auth" className="text-primary hover:underline font-medium">
                   Create an account
                 </Link>{" "}
@@ -281,10 +420,7 @@ const DemoDashboard = () => {
                 <span className="font-bold text-amber-700 dark:text-amber-300">{availableBalance}</span>
               </div>
               <button 
-                onClick={() => {
-                  playClick();
-                  setShowBanner(false);
-                }}
+                onClick={() => { playClick(); setShowBanner(false); }}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -295,14 +431,38 @@ const DemoDashboard = () => {
       )}
 
       <div className="max-w-6xl mx-auto px-4 pb-8">
-        {/* Demo Header */}
+        {/* Header with Navigation */}
         <header className="py-4 flex items-center justify-between border-b border-border/50 mb-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-xl font-semibold text-foreground">🌿 Reflect</span>
-            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-              DEMO
-            </span>
-          </Link>
+          <div className="flex items-center gap-4">
+            {/* Back/Forward Navigation */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goBack}
+                disabled={!canGoBack}
+                className={!canGoBack ? "opacity-50" : ""}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goForward}
+                disabled={!canGoForward}
+                className={!canGoForward ? "opacity-50" : ""}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <Link to="/" className="flex items-center gap-2">
+              <span className="text-xl font-semibold text-foreground">🌿 Reflect</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                DEMO
+              </span>
+            </Link>
+          </div>
           <div className="flex items-center gap-3">
             <Link to="/auth">
               <Button size="sm" className="rounded-full" onClick={playClick}>
@@ -325,24 +485,7 @@ const DemoDashboard = () => {
           </div>
         )}
         
-        <HeroSection onStartCheckIn={() => {
-          playClick();
-          setShowReflection(true);
-        }} />
-        
-        {showReflection && (
-          <div className="py-6 space-y-6">
-            <DemoMoodTracker onMoodSelect={(mood) => {
-              playClick();
-              setSelectedMood(mood);
-            }} />
-            <ReflectionPrompts isVisible={showReflection} />
-            <DemoCheckInJournal 
-              selectedMood={selectedMood} 
-              onCookieEarned={handleJournalSave}
-            />
-          </div>
-        )}
+        <HeroSection onStartCheckIn={handleStartCheckIn} />
 
         {/* Quote of the day */}
         <div className="py-6">
@@ -354,20 +497,7 @@ const DemoDashboard = () => {
         {/* Two column layout */}
         <div className="grid md:grid-cols-2 gap-6 py-6">
           <div className="space-y-6">
-            <DemoWeeklyStreak 
-              completedHabits={completedHabits}
-              completedSteps={completedSteps}
-              totalHabits={totalHabits}
-              totalSteps={totalSteps}
-            />
-            <AchievementBadges 
-              stats={achievementStats}
-              onAchievementUnlock={(achievement) => {
-                celebrate("large");
-                // Award bonus cookie for achievement
-                handleAddCookie(`🏅 Achievement: ${achievement.name}`, "bonus");
-              }}
-            />
+            <DemoWeeklyReflection />
             <DemoMoodChart />
             <DemoPastJournalsCard />
           </div>
@@ -389,10 +519,7 @@ const DemoDashboard = () => {
             <DemoCookieJarCard 
               cookies={allCookies.slice(0, 10)} 
               totalBalance={availableBalance}
-              onOpenShop={() => {
-                playClick();
-                setShowShop(true);
-              }}
+              onOpenShop={() => { playClick(); setShowShop(true); }}
               ownedItemsCount={ownedItems.length}
               equippedAvatar={equippedAvatar}
             />
@@ -400,21 +527,23 @@ const DemoDashboard = () => {
           </div>
         </div>
 
-        {/* Static Perspective Swap - no AI credits */}
+        {/* Achievements at the end */}
         <div className="py-6 max-w-2xl mx-auto">
-          <DemoPerspectiveSwap onShow={playClick} />
+          <AchievementBadges 
+            stats={achievementStats}
+            onAchievementUnlock={(achievement) => {
+              celebrate("large");
+              handleAddCookie(`🏅 Achievement: ${achievement.name}`, "bonus");
+            }}
+          />
         </div>
         
         <SafetyNote />
       </div>
 
-      {/* Cookie Shop Modal */}
       <DemoCookieShop
         isOpen={showShop}
-        onClose={() => {
-          playClick();
-          setShowShop(false);
-        }}
+        onClose={() => { playClick(); setShowShop(false); }}
         cookieBalance={availableBalance}
         onPurchase={handlePurchase}
         ownedItems={ownedItems}
@@ -425,7 +554,6 @@ const DemoDashboard = () => {
         onResetTheme={handleResetTheme}
       />
 
-      {/* Cursor Effects */}
       <CursorEffects equippedCursor={equippedCursor} />
     </div>
   );
