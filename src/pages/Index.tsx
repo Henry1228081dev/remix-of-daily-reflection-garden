@@ -5,13 +5,17 @@ import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
 import TinyStepsCard from "@/components/TinyStepsCard";
 import CookieJarCard from "@/components/CookieJarCard";
-import JournalCard from "@/components/JournalCard";
+import PastJournalsCard from "@/components/PastJournalsCard";
 import KindNotesCard from "@/components/KindNotesCard";
+import MoodTracker from "@/components/MoodTracker";
+import CheckInJournal from "@/components/CheckInJournal";
+import HabitsCard from "@/components/HabitsCard";
 import PerspectiveSwapButton from "@/components/PerspectiveSwapButton";
 import SafetyNote from "@/components/SafetyNote";
 
 const Index = () => {
   const [showReflection, setShowReflection] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,8 +25,10 @@ const Index = () => {
         <HeroSection onStartCheckIn={() => setShowReflection(true)} />
         
         {showReflection && (
-          <div className="py-6">
+          <div className="py-6 space-y-6">
+            <MoodTracker onMoodSelect={setSelectedMood} />
             <ReflectionPrompts isVisible={showReflection} />
+            <CheckInJournal selectedMood={selectedMood} />
           </div>
         )}
 
@@ -38,7 +44,7 @@ const Index = () => {
           {/* Left column */}
           <div className="space-y-6">
             <TinyStepsCard />
-            <JournalCard />
+            <PastJournalsCard />
           </div>
 
           {/* Right column */}
@@ -46,6 +52,11 @@ const Index = () => {
             <CookieJarCard />
             <KindNotesCard />
           </div>
+        </div>
+
+        {/* Full width habits section */}
+        <div className="py-6">
+          <HabitsCard />
         </div>
 
         <PerspectiveSwapButton />
