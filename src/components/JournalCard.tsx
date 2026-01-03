@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Lightbulb, Check } from "lucide-react";
+
+const STORAGE_KEY = "reflect-journal-entries";
+
+interface JournalEntry {
+  date: string;
+  entry: string;
+  prompt?: string;
+}
 
 const prompts = [
   "What's one thing you're grateful for today?",
@@ -16,9 +24,20 @@ const prompts = [
 ];
 
 const JournalCard = () => {
-  const [entry, setEntry] = useState("");
-  const [currentPrompt, setCurrentPrompt] = useState("");
+  const today = new Date().toDateString();
+  const [entries, setEntries] = useState<JournalEntry[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const todayEntry = entries.find(e => e.date === today);
+  const [entry, setEntry] = useState(todayEntry?.entry || "");
+  const [currentPrompt, setCurrentPrompt] = useState(todayEntry?.prompt || "");
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }, [entries]);
 
   const getPrompt = () => {
     const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
@@ -27,12 +46,19 @@ const JournalCard = () => {
 
   const saveEntry = () => {
     if (entry.trim()) {
+      const newEntry: JournalEntry = {
+        date: today,
+        entry: entry.trim(),
+        prompt: currentPrompt || undefined,
+      };
+      
+      setEntries(prev => {
+        const filtered = prev.filter(e => e.date !== today);
+        return [...filtered, newEntry];
+      });
+      
       setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-        setEntry("");
-        setCurrentPrompt("");
-      }, 2000);
+      setTimeout(() => setSaved(false), 2000);
     }
   };
 

@@ -1,20 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Check } from "lucide-react";
+
+const STORAGE_KEY = "reflect-daily-reflection";
 
 interface ReflectionPromptsProps {
   isVisible: boolean;
 }
 
 const ReflectionPrompts = ({ isVisible }: ReflectionPromptsProps) => {
-  const [responses, setResponses] = useState({
-    wentWell: "",
-    didntGoWell: "",
-    differently: "",
+  const [responses, setResponses] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Only restore if it's from today
+      if (parsed.date === new Date().toDateString()) {
+        return parsed.responses;
+      }
+    }
+    return { wentWell: "", didntGoWell: "", differently: "" };
   });
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      date: new Date().toDateString(),
+      responses
+    }));
+  }, [responses]);
 
   const handleSave = () => {
     setSaved(true);

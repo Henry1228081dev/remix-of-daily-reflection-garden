@@ -1,12 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Cookie, X } from "lucide-react";
 
+const STORAGE_KEY = "reflect-cookie-jar";
+
 const CookieJarCard = () => {
-  const [cookies, setCookies] = useState<string[]>([]);
+  const [cookies, setCookies] = useState<string[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [newCookie, setNewCookie] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cookies));
+  }, [cookies]);
 
   const addCookie = () => {
     if (newCookie.trim()) {
