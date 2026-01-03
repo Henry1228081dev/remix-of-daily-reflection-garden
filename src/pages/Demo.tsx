@@ -1,112 +1,91 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MiniChart } from "@/components/ui/mini-chart";
-import { ArrowLeft, Heart, BookOpen, Sparkles, Cookie, TrendingUp, Calendar } from "lucide-react";
+import { ScreenTimeCard } from "@/components/ui/screen-time-card";
+import { GradientBackground } from "@/components/ui/gradient-background";
+import { ArrowLeft, Heart, BookOpen, Sparkles, Cookie, TrendingUp, Calendar, Target, PenLine } from "lucide-react";
 
 const Demo = () => {
-  // Sample data for different charts
-  const moodData = [
-    { label: "Mon", value: 75 },
-    { label: "Tue", value: 90 },
-    { label: "Wed", value: 60 },
-    { label: "Thu", value: 85 },
-    { label: "Fri", value: 70 },
-    { label: "Sat", value: 95 },
-    { label: "Sun", value: 80 },
+  // Sample data for the activity chart
+  const activityData = [
+    20, 15, 10, 8, 12, 25, 35, 45, 60, 75, 80, 85,
+    70, 65, 55, 50, 60, 75, 80, 90, 85, 75, 60, 50
   ];
 
-  const habitData = [
-    { label: "Mon", value: 100 },
-    { label: "Tue", value: 66 },
-    { label: "Wed", value: 33 },
-    { label: "Thu", value: 100 },
-    { label: "Fri", value: 66 },
-    { label: "Sat", value: 100 },
-    { label: "Sun", value: 66 },
-  ];
-
-  const journalData = [
-    { label: "Mon", value: 85 },
-    { label: "Tue", value: 0 },
-    { label: "Wed", value: 90 },
-    { label: "Thu", value: 75 },
-    { label: "Fri", value: 0 },
-    { label: "Sat", value: 95 },
-    { label: "Sun", value: 80 },
+  const topActivities = [
+    {
+      icon: <PenLine className="w-4 h-4" />,
+      name: "Journaling",
+      duration: "2h 15m",
+      color: "bg-primary/20 text-primary"
+    },
+    {
+      icon: <Heart className="w-4 h-4" />,
+      name: "Mood Check-ins",
+      duration: "45m",
+      color: "bg-rose-500/20 text-rose-500"
+    },
+    {
+      icon: <Target className="w-4 h-4" />,
+      name: "Habits",
+      duration: "1h 30m",
+      color: "bg-amber-500/20 text-amber-500"
+    },
+    {
+      icon: <Cookie className="w-4 h-4" />,
+      name: "Celebrations",
+      duration: "20m",
+      color: "bg-orange-500/20 text-orange-500"
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/20 to-background">
+    <GradientBackground>
       {/* Navigation */}
       <nav className="w-full px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-        <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <Link to="/" className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
         <Link to="/auth">
-          <Button className="rounded-full px-6">Get Started</Button>
+          <Button className="rounded-full px-6 shadow-lg">Get Started</Button>
         </Link>
       </nav>
 
       {/* Hero */}
       <header className="max-w-4xl mx-auto px-6 pt-12 pb-8 text-center">
-        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/60 backdrop-blur-sm text-primary text-sm font-medium mb-6 border border-primary/20">
           <Sparkles className="w-4 h-4" />
           DEMO / PREVIEW
         </span>
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+        <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-4">
           See Reflect in Action
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
           Here's a preview of how Reflect helps you track your wellness journey with beautiful, 
           insightful visualizations.
         </p>
       </header>
 
-      {/* Activity Charts Grid */}
-      <section className="max-w-5xl mx-auto px-6 py-12">
-        <div className="grid md:grid-cols-3 gap-8 justify-items-center">
-          {/* Mood Tracking */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-foreground font-medium">
-              <Heart className="w-5 h-5 text-primary" />
-              Mood Tracking
-            </div>
-            <MiniChart data={moodData} title="Weekly Mood" />
-            <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Track how you're feeling each day and spot patterns in your emotional wellness.
-            </p>
-          </div>
-
-          {/* Habit Completion */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-foreground font-medium">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Habit Streaks
-            </div>
-            <MiniChart data={habitData} title="Habits Done" />
-            <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Build momentum with daily habits and celebrate your consistency.
-            </p>
-          </div>
-
-          {/* Journal Activity */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-foreground font-medium">
-              <BookOpen className="w-5 h-5 text-primary" />
-              Journal Entries
-            </div>
-            <MiniChart data={journalData} title="Reflections" />
-            <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Capture your thoughts and watch your reflection practice grow.
-            </p>
-          </div>
+      {/* Main Activity Card */}
+      <section className="max-w-4xl mx-auto px-6 py-8">
+        <div className="flex justify-center">
+          <ScreenTimeCard
+            totalHours={4}
+            totalMinutes={50}
+            barData={activityData}
+            timeLabels={["Mon", "Wed", "Fri", "Sun"]}
+            topApps={topActivities}
+            className="w-full"
+          />
         </div>
+        <p className="text-center text-foreground/60 text-sm mt-4">
+          Your weekly wellness activity overview
+        </p>
       </section>
 
       {/* Features Overview */}
       <section className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-card rounded-3xl border border-border/50 p-8 md:p-12">
+        <div className="bg-card/80 backdrop-blur-xl rounded-3xl border border-border/50 p-8 md:p-12 shadow-xl">
           <h2 className="text-2xl font-serif font-bold text-foreground mb-8 text-center">
             Everything you need for mindful growth
           </h2>
@@ -138,31 +117,33 @@ const Demo = () => {
 
       {/* CTA */}
       <section className="max-w-2xl mx-auto px-6 py-16 text-center">
-        <h2 className="text-3xl font-serif font-bold text-foreground mb-4">
-          Ready to try it yourself?
-        </h2>
-        <p className="text-muted-foreground mb-8">
-          Explore the full app experience in demo mode, or create an account to save your progress.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/demo/app">
-            <Button size="lg" variant="outline" className="rounded-full px-8">
-              Try Demo Mode
-            </Button>
-          </Link>
-          <Link to="/auth">
-            <Button size="lg" className="rounded-full px-8">
-              Get Started Free
-            </Button>
-          </Link>
+        <div className="bg-card/80 backdrop-blur-xl rounded-3xl border border-border/50 p-8 shadow-xl">
+          <h2 className="text-3xl font-serif font-bold text-foreground mb-4">
+            Ready to try it yourself?
+          </h2>
+          <p className="text-foreground/70 mb-8">
+            Explore the full app experience in demo mode, or create an account to save your progress.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/demo/app">
+              <Button size="lg" variant="outline" className="rounded-full px-8 bg-background/50 backdrop-blur-sm">
+                Try Demo Mode
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button size="lg" className="rounded-full px-8 shadow-lg">
+                Get Started Free
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 text-center text-muted-foreground text-sm">
+      <footer className="py-8 text-center text-foreground/60 text-sm">
         <p>Made with 💚 for your mental wellness</p>
       </footer>
-    </div>
+    </GradientBackground>
   );
 };
 
