@@ -9,13 +9,17 @@ import PastJournalsCard from "@/components/PastJournalsCard";
 import KindNotesCard from "@/components/KindNotesCard";
 import MoodTracker from "@/components/MoodTracker";
 import CheckInJournal from "@/components/CheckInJournal";
-import HabitsCard from "@/components/HabitsCard";
 import PerspectiveSwapButton from "@/components/PerspectiveSwapButton";
 import SafetyNote from "@/components/SafetyNote";
 
 const Index = () => {
   const [showReflection, setShowReflection] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [journalKey, setJournalKey] = useState(0);
+
+  const handleJournalSave = () => {
+    setJournalKey(prev => prev + 1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +32,7 @@ const Index = () => {
           <div className="py-6 space-y-6">
             <MoodTracker onMoodSelect={setSelectedMood} />
             <ReflectionPrompts isVisible={showReflection} />
-            <CheckInJournal selectedMood={selectedMood} />
+            <CheckInJournal selectedMood={selectedMood} onSave={handleJournalSave} />
           </div>
         )}
 
@@ -44,7 +48,7 @@ const Index = () => {
           {/* Left column */}
           <div className="space-y-6">
             <TinyStepsCard />
-            <PastJournalsCard />
+            <PastJournalsCard key={journalKey} />
           </div>
 
           {/* Right column */}
@@ -52,11 +56,6 @@ const Index = () => {
             <CookieJarCard />
             <KindNotesCard />
           </div>
-        </div>
-
-        {/* Full width habits section */}
-        <div className="py-6">
-          <HabitsCard />
         </div>
 
         <PerspectiveSwapButton />
