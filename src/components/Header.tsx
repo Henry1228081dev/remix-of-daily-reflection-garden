@@ -19,7 +19,8 @@ const Header = () => {
         variant: "destructive",
       });
     } else {
-      localStorage.removeItem("surveyCompleted");
+      // Keep onboarding completion in localStorage so users don't have to redo the survey
+      // every time they log out and log back in.
       navigate("/", { replace: true });
       toast({
         title: "See you soon! 🌿",
