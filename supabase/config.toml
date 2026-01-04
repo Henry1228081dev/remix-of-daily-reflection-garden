@@ -1,1 +1,7 @@
 project_id = "twviqymelkwahoxdaess"
+
+[functions.generate-kind-note]
+verify_jwt = false
+
+[functions.suggest-replacements]
+verify_jwt = false
