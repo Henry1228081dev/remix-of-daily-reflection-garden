@@ -9,6 +9,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
+import BadHabitsOnboarding from "./BadHabitsOnboarding";
+import { useBadHabits } from "@/hooks/useBadHabits";
+import { useAuth } from "@/hooks/useAuth";
+
+interface BadHabitSelection {
+  habitName: string;
+  replacement: string;
+}
 
 interface UserProfile {
   intent: string[];
@@ -18,6 +26,7 @@ interface UserProfile {
   stepPreference: string;
   obstacles: string[];
   reflectionStyle: string;
+  badHabits: BadHabitSelection[];
   consentGiven: boolean;
   completedAt: string;
 }
@@ -66,6 +75,8 @@ const DAILY_HABIT_SUGGESTIONS = [
 
 const OnboardingSurvey = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addBadHabit } = useBadHabits();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [newHabit, setNewHabit] = useState("");
   const [newStep, setNewStep] = useState("");
@@ -77,10 +88,11 @@ const OnboardingSurvey = () => {
     stepPreference: "",
     obstacles: [],
     reflectionStyle: "",
+    badHabits: [],
     consentGiven: false,
   });
 
-  const totalQuestions = 8;
+  const totalQuestions = 9; // Added bad habits step
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
 
   const canProceed = (): boolean => {
@@ -100,6 +112,8 @@ const OnboardingSurvey = () => {
       case 6:
         return !!answers.reflectionStyle;
       case 7:
+        return true; // Bad habits step - can skip
+      case 8:
         return answers.consentGiven === true;
       default:
         return false;
@@ -120,7 +134,7 @@ const OnboardingSurvey = () => {
     }
   };
 
-  const completeSurvey = () => {
+  const completeSurvey = async () => {
     const profile: UserProfile = {
       intent: answers.intent || [],
       habitToBuild: answers.habitToBuild || "",
@@ -129,9 +143,24 @@ const OnboardingSurvey = () => {
       stepPreference: answers.stepPreference || "",
       obstacles: answers.obstacles || [],
       reflectionStyle: answers.reflectionStyle || "",
+      badHabits: answers.badHabits || [],
       consentGiven: answers.consentGiven || false,
       completedAt: new Date().toISOString(),
     };
+
+    // Save bad habits to database if user is logged in
+    if (user && answers.badHabits && answers.badHabits.length > 0) {
+      for (const habit of answers.badHabits) {
+        try {
+          await addBadHabit.mutateAsync({
+            habitName: habit.habitName,
+            replacementHabit: habit.replacement,
+          });
+        } catch (error) {
+          console.error("Failed to save bad habit:", error);
+        }
+      }
+    }
 
     localStorage.setItem("userProfile", JSON.stringify(profile));
     localStorage.setItem("surveyCompleted", "true");
@@ -142,6 +171,15 @@ const OnboardingSurvey = () => {
     });
 
     navigate("/");
+  };
+
+  const handleBadHabitsComplete = (habits: BadHabitSelection[]) => {
+    setAnswers((prev) => ({ ...prev, badHabits: habits }));
+    setCurrentQuestion((prev) => prev + 1);
+  };
+
+  const handleBadHabitsSkip = () => {
+    setCurrentQuestion((prev) => prev + 1);
   };
 
   const addCustomHabit = () => {
@@ -453,6 +491,14 @@ const OnboardingSurvey = () => {
         );
 
       case 7:
+        return (
+          <BadHabitsOnboarding
+            onComplete={handleBadHabitsComplete}
+            onSkip={handleBadHabitsSkip}
+          />
+        );
+
+      case 8:
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold text-foreground">Almost there! 🌱</h2>

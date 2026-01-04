@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      bad_habit_logs: {
+        Row: {
+          bad_habit_id: string
+          id: string
+          intensity: number | null
+          log_type: string
+          logged_at: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          bad_habit_id: string
+          id?: string
+          intensity?: number | null
+          log_type: string
+          logged_at?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          bad_habit_id?: string
+          id?: string
+          intensity?: number | null
+          log_type?: string
+          logged_at?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bad_habit_logs_bad_habit_id_fkey"
+            columns: ["bad_habit_id"]
+            isOneToOne: false
+            referencedRelation: "bad_habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bad_habits: {
+        Row: {
+          best_streak: number
+          created_at: string
+          days_clean: number
+          habit_name: string
+          id: string
+          is_active: boolean
+          last_slip_date: string | null
+          replacement_habit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_streak?: number
+          created_at?: string
+          days_clean?: number
+          habit_name: string
+          id?: string
+          is_active?: boolean
+          last_slip_date?: string | null
+          replacement_habit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_streak?: number
+          created_at?: string
+          days_clean?: number
+          habit_name?: string
+          id?: string
+          is_active?: boolean
+          last_slip_date?: string | null
+          replacement_habit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cookies: {
         Row: {
           description: string

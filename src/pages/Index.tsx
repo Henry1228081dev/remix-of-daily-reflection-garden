@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
 import TinyStepsCard from "@/components/TinyStepsCard";
 import HabitTrackerCard from "@/components/HabitTrackerCard";
+import BadHabitTrackerCard from "@/components/BadHabitTrackerCard";
 import CookieJarCard, { CookieJarCardRef } from "@/components/CookieJarCard";
 import PastJournalsCard from "@/components/PastJournalsCard";
 import KindNotesCard from "@/components/KindNotesCard";
@@ -17,6 +18,7 @@ import SafetyNote from "@/components/SafetyNote";
 import MoodNotificationSettings from "@/components/MoodNotificationSettings";
 import { useMoodNotifications } from "@/hooks/useMoodNotifications";
 import { useMoodEntries } from "@/hooks/useMoodEntries";
+import { useUrgeNotifications } from "@/hooks/useUrgeNotifications";
 
 const Index = () => {
   const [showReflection, setShowReflection] = useState(false);
@@ -25,9 +27,10 @@ const Index = () => {
   const [cookieCount, setCookieCount] = useState(0);
   const cookieJarRef = useRef<CookieJarCardRef>(null);
 
-  // Initialize mood notifications
+  // Initialize notifications
   const { upsertMood } = useMoodEntries();
   useMoodNotifications((mood) => upsertMood.mutate(mood));
+  useUrgeNotifications(); // Initialize urge check-in notifications
 
   const handleJournalSave = () => {
     setJournalKey(prev => prev + 1);
@@ -77,6 +80,7 @@ const Index = () => {
 
           {/* Right column */}
           <div className="space-y-6">
+            <BadHabitTrackerCard />
             <HabitTrackerCard onCookieEarned={(count) => {
               setCookieCount(count);
               cookieJarRef.current?.refresh();
