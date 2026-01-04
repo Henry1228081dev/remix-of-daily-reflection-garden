@@ -7,6 +7,7 @@ import ReflectionPrompts from "@/components/ReflectionPrompts";
 import QuoteCard from "@/components/QuoteCard";
 import DemoTinyStepsCard from "@/components/demo/DemoTinyStepsCard";
 import DemoHabitTrackerCard from "@/components/demo/DemoHabitTrackerCard";
+import DemoBadHabitTrackerCard from "@/components/demo/DemoBadHabitTrackerCard";
 import DemoCookieJarCard from "@/components/demo/DemoCookieJarCard";
 import DemoPastJournalsCard from "@/components/demo/DemoPastJournalsCard";
 import DemoKindNotesCard from "@/components/demo/DemoKindNotesCard";
@@ -549,6 +550,9 @@ const DemoDashboard = () => {
               onHabitsChange={(count) => {
                 // Sync habits array length if needed
               }}
+            />
+            <DemoBadHabitTrackerCard 
+              onCookieEarned={(desc) => handleAddCookie(desc, "resist")}
             />
             <DemoTinyStepsCard 
               onCookieEarned={(desc) => handleAddCookie(desc, "step")}
